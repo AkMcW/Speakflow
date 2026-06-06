@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --color-blue: #0056D2;
+  --color-blue-dark: #003B8E;
+  --color-blue-light: #E8F1FF;
+  --color-text: #1F1F1F;
+  --color-muted: #636363;
+  --color-surface: #F5F5F5;
+  --color-border: #E0E0E0;
+  --color-green: #00B37D;
+  --color-green-light: #E6F7F2;
+  --color-yellow: #F5A623;
+  --font-sans: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+  color: #1F1F1F;
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+
+/* Wave animation for recording */
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+.wave-bar { animation: wave 1.2s ease-in-out infinite; }
+.wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.wave-bar:nth-child(4) { animation-delay: 0.3s; }
+.wave-bar:nth-child(5) { animation-delay: 0.4s; }
+.wave-bar:nth-child(6) { animation-delay: 0.3s; }
+.wave-bar:nth-child(7) { animation-delay: 0.2s; }
+.wave-bar:nth-child(8) { animation-delay: 0.1s; }
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(0, 86, 210, 0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(0, 86, 210, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 86, 210, 0); }
+}
+.pulse-ring { animation: pulse-ring 2s ease-out infinite; }
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin-slow { animation: spin-slow 3s linear infinite; }
