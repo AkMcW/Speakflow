@@ -204,8 +204,8 @@ export default function ScriptWriterPage() {
       setScript(data.script);
       setWordCount(data.script.split(/\s+/).filter(Boolean).length);
       setGenerated(true);
-    } catch {
-      setError("Failed to generate script. Please check your OpenAI API key is set.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate script.");
     } finally {
       setLoading(false);
     }
