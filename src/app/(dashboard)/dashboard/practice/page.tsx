@@ -101,10 +101,13 @@ export default function PracticePage() {
           }),
         });
         const analysis = await res.json();
-        // Store results in sessionStorage for the results page
+        if (!res.ok || analysis.error || !analysis.scores) throw new Error(analysis.error ?? "No scores returned");
         sessionStorage.setItem("speakflow_analysis", JSON.stringify({ ...analysis, transcript: transcriptText }));
-      } catch {
-        // Store mock results if API fails
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Analysis failed";
+        console.error("Analysis error:", msg);
+        setError(`AI analysis failed: ${msg}. Showing sample scores.`);
+        // Fall back to mock results so the results page still loads
         sessionStorage.setItem("speakflow_analysis", JSON.stringify({
           scores: { pronunciation: 74, fluency: 81, confidence: 68, structure: 77, vocabulary: 72, pace: 83, overall: 76 },
           fillerWords: { count: 3, words: ["um", "uh", "like"] },
