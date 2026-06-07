@@ -5,8 +5,8 @@ import {
   LayoutDashboard, FileText, Mic, BarChart2, BookOpen,
   Briefcase, Monitor, Users, Settings, CreditCard, Save, Mic2, ShieldCheck
 } from "lucide-react";
-import { useUser } from "@/lib/UserContext";
-import { PLAN_FEATURES } from "@/lib/users";
+import { useUser as useClerkUser } from "@clerk/nextjs";
+import { ADMIN_EMAIL, PLAN_FEATURES } from "@/lib/users";
 
 const navSections = [
   {
@@ -39,9 +39,10 @@ const navSections = [
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
-  const { user } = useUser();
-  const planInfo = PLAN_FEATURES[user.plan];
-  const isAdmin = user.plan === "admin";
+  const { user } = useClerkUser();
+  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+  const isAdmin = email === ADMIN_EMAIL;
+  const planInfo = PLAN_FEATURES[isAdmin ? "admin" : "free"];
 
   return (
     <aside className="w-56 shrink-0 hidden lg:flex flex-col bg-white border-r border-[#E0E0E0] min-h-screen">
@@ -103,7 +104,7 @@ export default function DashboardSidebar() {
           ) : (
             <>
               <p className="text-xs text-[#636363] mt-0.5">
-                {user.sessionsUsed}/{user.sessionsLimit} sessions used
+                5 sessions used this month
               </p>
               <Link
                 href="/pricing"

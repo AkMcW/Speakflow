@@ -2,6 +2,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X, Mic2, ChevronDown } from "lucide-react";
+import {
+  SignInButton,
+  SignUpButton,
+  UserButton,
+  useUser,
+} from "@clerk/nextjs";
 
 const navItems = [
   {
@@ -20,6 +26,7 @@ const navItems = [
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [dropdown, setDropdown] = useState<string | null>(null);
+  const { isSignedIn } = useUser();
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-[#E0E0E0]">
@@ -73,17 +80,29 @@ export default function Navbar() {
           )}
         </nav>
 
-        {/* CTA */}
+        {/* Auth CTA */}
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/login" className="text-sm font-semibold text-[#1F1F1F] hover:text-[#0056D2] transition-colors">
-            Log In
-          </Link>
-          <Link
-            href="/signup"
-            className="inline-flex items-center bg-[#0056D2] hover:bg-[#003B8E] text-white font-semibold px-4 py-2 rounded text-sm transition-colors"
-          >
-            Start for Free
-          </Link>
+          {!isSignedIn ? (
+            <>
+              <SignInButton mode="modal">
+                <button className="text-sm font-semibold text-[#1F1F1F] hover:text-[#0056D2] transition-colors">
+                  Log In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className="inline-flex items-center bg-[#0056D2] hover:bg-[#003B8E] text-white font-semibold px-4 py-2 rounded text-sm transition-colors">
+                  Start for Free
+                </button>
+              </SignUpButton>
+            </>
+          ) : (
+            <>
+              <Link href="/dashboard" className="text-sm font-semibold text-[#0056D2] hover:text-[#003B8E] transition-colors">
+                Dashboard
+              </Link>
+              <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+            </>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -101,8 +120,24 @@ export default function Navbar() {
           <Link href="/interview-coach" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium text-[#1F1F1F]">Interview Coach</Link>
           <Link href="/pricing" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium text-[#1F1F1F]">Pricing</Link>
           <div className="pt-3 flex flex-col gap-2">
-            <Link href="/login" onClick={() => setOpen(false)} className="block text-center py-2 border border-[#0056D2] text-[#0056D2] rounded font-semibold text-sm">Log In</Link>
-            <Link href="/signup" onClick={() => setOpen(false)} className="block text-center py-2 bg-[#0056D2] text-white rounded font-semibold text-sm">Start for Free</Link>
+            {!isSignedIn ? (
+              <>
+                <SignInButton mode="modal">
+                  <button onClick={() => setOpen(false)} className="w-full text-center py-2 border border-[#0056D2] text-[#0056D2] rounded font-semibold text-sm">
+                    Log In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button onClick={() => setOpen(false)} className="w-full text-center py-2 bg-[#0056D2] text-white rounded font-semibold text-sm">
+                    Start for Free
+                  </button>
+                </SignUpButton>
+              </>
+            ) : (
+              <Link href="/dashboard" onClick={() => setOpen(false)} className="block text-center py-2 bg-[#0056D2] text-white rounded font-semibold text-sm">
+                Go to Dashboard
+              </Link>
+            )}
           </div>
         </div>
       )}

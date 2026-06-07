@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { Users, Smile, Briefcase, Frown, Building, UserCheck, BookOpen, Lock, Play, ShieldCheck } from "lucide-react";
-import { useUser } from "@/lib/UserContext";
+import { useUser } from "@clerk/nextjs";
+import { ADMIN_EMAIL } from "@/lib/users";
 
 const audienceModes = [
   {
@@ -50,7 +51,9 @@ const audienceModes = [
 
 export default function AudiencePage() {
   const { user } = useUser();
-  const hasAccess = user.plan === "admin" || user.plan === "pro_plus" || user.plan === "team";
+  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+  const isAdmin = email === ADMIN_EMAIL;
+  const hasAccess = isAdmin;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -62,8 +65,8 @@ export default function AudiencePage() {
         </div>
         {hasAccess && (
           <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#E6F7F2] text-[#00B37D] px-3 py-1.5 rounded-full">
-            {user.plan === "admin" ? <ShieldCheck size={12} /> : null}
-            {user.plan === "admin" ? "Admin Access" : "Unlocked"}
+            {isAdmin ? <ShieldCheck size={12} /> : null}
+            {isAdmin ? "Admin Access" : "Unlocked"}
           </span>
         )}
       </div>
@@ -87,13 +90,13 @@ export default function AudiencePage() {
         </div>
       ) : (
         <div className="bg-[#E6F7F2] border border-[#00B37D] rounded-lg p-4 flex items-center gap-3">
-          {user.plan === "admin" ? (
+          {isAdmin ? (
             <ShieldCheck size={18} className="text-[#00B37D] shrink-0" />
           ) : (
             <Play size={18} className="text-[#00B37D] shrink-0" />
           )}
           <p className="text-sm font-medium text-[#1F1F1F]">
-            {user.plan === "admin"
+            {isAdmin
               ? "Admin access — all audience modes fully unlocked."
               : "All 6 audience modes are unlocked on your Pro+ plan. Select a mode to begin."}
           </p>
