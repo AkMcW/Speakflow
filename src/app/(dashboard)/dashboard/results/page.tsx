@@ -1,78 +1,160 @@
+"use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import ScoreRing from "@/components/ScoreRing";
-import { CheckCircle, Flag, ArrowRight, RotateCcw } from "lucide-react";
+import { CheckCircle, Flag, ArrowRight, RotateCcw, Mic } from "lucide-react";
 
-const scores = [
-  { label: "Pronunciation", score: 72 },
-  { label: "Fluency", score: 80 },
-  { label: "Confidence", score: 68 },
-  { label: "Structure", score: 75 },
-  { label: "Vocabulary", score: 71 },
-  { label: "Pace", score: 83 },
-];
+interface Analysis {
+  scores: {
+    pronunciation: number;
+    fluency: number;
+    confidence: number;
+    structure: number;
+    vocabulary: number;
+    pace: number;
+    overall: number;
+  };
+  fillerWords: { count: number; words: string[] };
+  wpm: number;
+  strengths: string[];
+  improvements: string[];
+  aiFeedback: string;
+  bandScore?: number | null;
+  transcript?: string;
+}
 
-const overallScore = Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length);
+const FALLBACK: Analysis = {
+  scores: { pronunciation: 72, fluency: 80, confidence: 68, structure: 75, vocabulary: 71, pace: 83, overall: 75 },
+  fillerWords: { count: 3, words: ["um", "uh", "like"] },
+  wpm: 128,
+  strengths: [
+    "Strong sentence structure — your ideas were organized logically with clear transitions.",
+    "Good vocabulary range — you used varied professional language without repetition.",
+    "Excellent pace — you maintained a clear, listener-friendly speed throughout.",
+  ],
+  improvements: [
+    "Pronunciation of /th/ sounds (e.g. \"the\", \"that\") needs practice.",
+    "You used filler sounds like \"um\" and \"uh\" — try pause-and-breathe instead.",
+    "Confidence dipped toward the end — practice your closing lines separately.",
+  ],
+  aiFeedback: "Overall, a solid delivery with good structure and pacing. Focus on reducing filler words and building confidence in your closing. Record yourself regularly to track improvement.",
+};
 
-const strengths = [
-  "Strong sentence structure — your ideas were organized logically with clear transitions.",
-  "Good vocabulary range — you used varied professional language without repetition.",
-  "Excellent pace — you maintained a clear, listener-friendly speed throughout.",
-];
+function scoreColor(score: number) {
+  if (score >= 80) return "text-[#00B37D]";
+  if (score >= 60) return "text-[#F5A623]";
+  return "text-red-500";
+}
 
-const improvements = [
-  "Pronunciation of /th/ sounds (e.g. \"the\", \"that\", \"therefore\") needs practice.",
-  "You paused mid-sentence 3 times with filler sounds (\"um\", \"uh\"). Try pause-and-breathe instead.",
-  "Confidence dipped in the final 30 seconds — practice your closing lines separately.",
-];
-
-const aiFeedback = `Overall, this was a solid business presentation delivery. You demonstrated strong structure and pacing, which are critical for executive communication.
-
-Your main area to focus on is pronunciation clarity — specifically the /th/ phoneme which appeared 12 times and was consistently replaced with /d/ or /f/. This is a very common pattern for speakers of Indian, East Asian, and Brazilian English backgrounds, and can be corrected with targeted drilling.
-
-For your next practice session, try recording just your opening and closing sections independently before doing the full script. This will help build automatic confidence in the moments that matter most.`;
+function scoreLabel(score: number) {
+  if (score >= 90) return "Excellent";
+  if (score >= 80) return "Great";
+  if (score >= 70) return "Good";
+  if (score >= 60) return "Fair";
+  return "Needs Work";
+}
 
 export default function ResultsPage() {
+  const [data, setData] = useState<Analysis | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("speakflow_analysis");
+      if (raw) setData(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const analysis = data ?? FALLBACK;
+  const isFallback = !data;
+
+  const scoreRows = [
+    { label: "Pronunciation", score: analysis.scores.pronunciation },
+    { label: "Fluency", score: analysis.scores.fluency },
+    { label: "Confidence", score: analysis.scores.confidence },
+    { label: "Structure", score: analysis.scores.structure },
+    { label: "Vocabulary", score: analysis.scores.vocabulary },
+    { label: "Pace", score: analysis.scores.pace },
+  ];
+
+  const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#1F1F1F]">Session Results</h1>
-          <p className="text-sm text-[#636363] mt-1">Business Meeting · Q3 Project Update · Jun 6, 2026</p>
+          <p className="text-sm text-[#636363] mt-1">{today}</p>
         </div>
-        <span className="text-xs bg-[#E8F1FF] text-[#0056D2] px-3 py-1 rounded-full font-semibold">Session #7</span>
+        {analysis.wpm > 0 && (
+          <span className="text-xs bg-[#E8F1FF] text-[#0056D2] px-3 py-1 rounded-full font-semibold">
+            {analysis.wpm} wpm
+          </span>
+        )}
       </div>
+
+      {isFallback && (
+        <div className="bg-[#FFF8E6] border border-[#F5A623] rounded-lg p-3 text-sm text-[#7A5500] flex items-center gap-2">
+          <Mic size={14} className="shrink-0" />
+          No recent session found — showing sample results. Complete a practice session to see your real scores.
+        </div>
+      )}
 
       {/* Overall Score */}
       <div className="bg-white border border-[#E0E0E0] rounded-lg p-6 text-center">
         <p className="text-sm font-semibold text-[#636363] mb-4 uppercase tracking-wider">Overall Score</p>
         <div className="flex items-center justify-center gap-4 mb-2">
-          <span className="text-6xl font-bold text-[#1F1F1F]">{overallScore}</span>
+          <span className="text-6xl font-bold text-[#1F1F1F]">{analysis.scores.overall}</span>
           <span className="text-2xl text-[#636363] font-light">/100</span>
         </div>
-        <p className="text-sm text-[#00B37D] font-semibold">Good · +4 pts from last session</p>
+        <p className={`text-sm font-semibold ${scoreColor(analysis.scores.overall)}`}>
+          {scoreLabel(analysis.scores.overall)}
+        </p>
+        {analysis.fillerWords.count > 0 && (
+          <p className="text-xs text-[#636363] mt-2">
+            {analysis.fillerWords.count} filler word{analysis.fillerWords.count !== 1 ? "s" : ""} detected
+            {analysis.fillerWords.words.length > 0 && (
+              <> ({analysis.fillerWords.words.map(w => `"${w}"`).join(", ")})</>
+            )}
+          </p>
+        )}
+        {analysis.bandScore != null && (
+          <p className="text-xs text-[#636363] mt-1">Estimated IELTS Band: <strong>{analysis.bandScore}</strong></p>
+        )}
       </div>
 
       {/* Score Rings */}
       <div className="bg-white border border-[#E0E0E0] rounded-lg p-6">
         <h2 className="font-bold text-[#1F1F1F] mb-5">Score Breakdown</h2>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 justify-items-center">
-          {scores.map(({ label, score }) => (
+          {scoreRows.map(({ label, score }) => (
             <ScoreRing key={label} score={score} label={label} size={80} strokeWidth={7} />
           ))}
         </div>
       </div>
 
+      {/* Transcript */}
+      {analysis.transcript && (
+        <div className="bg-white border border-[#E0E0E0] rounded-lg p-5">
+          <h2 className="font-bold text-[#1F1F1F] mb-3 flex items-center gap-2">
+            <Mic size={16} className="text-[#0056D2]" />
+            Your Transcript
+          </h2>
+          <p className="text-sm text-[#636363] leading-relaxed">{analysis.transcript}</p>
+        </div>
+      )}
+
       {/* Feedback */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Strengths */}
         <div className="bg-white border border-[#E0E0E0] rounded-lg p-5">
           <h2 className="font-bold text-[#1F1F1F] mb-4 flex items-center gap-2">
             <CheckCircle size={16} className="text-[#00B37D]" />
             Strengths
           </h2>
           <ul className="space-y-3">
-            {strengths.map((s) => (
-              <li key={s} className="flex items-start gap-2 text-sm text-[#636363] leading-relaxed">
+            {analysis.strengths.map((s, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-[#636363] leading-relaxed">
                 <CheckCircle size={14} className="text-[#00B37D] mt-0.5 shrink-0" />
                 {s}
               </li>
@@ -80,15 +162,14 @@ export default function ResultsPage() {
           </ul>
         </div>
 
-        {/* Improvements */}
         <div className="bg-white border border-[#E0E0E0] rounded-lg p-5">
           <h2 className="font-bold text-[#1F1F1F] mb-4 flex items-center gap-2">
             <Flag size={16} className="text-[#F5A623]" />
             Improvement Areas
           </h2>
           <ul className="space-y-3">
-            {improvements.map((s) => (
-              <li key={s} className="flex items-start gap-2 text-sm text-[#636363] leading-relaxed">
+            {analysis.improvements.map((s, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-[#636363] leading-relaxed">
                 <Flag size={14} className="text-[#F5A623] mt-0.5 shrink-0" />
                 {s}
               </li>
@@ -105,7 +186,7 @@ export default function ResultsPage() {
           </div>
           <h2 className="font-bold text-[#1F1F1F]">AI Coach Feedback</h2>
         </div>
-        <p className="text-sm text-[#636363] leading-relaxed whitespace-pre-line">{aiFeedback}</p>
+        <p className="text-sm text-[#636363] leading-relaxed whitespace-pre-line">{analysis.aiFeedback}</p>
       </div>
 
       {/* Next Steps */}
