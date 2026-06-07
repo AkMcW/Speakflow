@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { Users, Smile, Briefcase, Frown, Building, UserCheck, BookOpen, Lock, Play, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Users, Smile, Frown, Building, UserCheck, BookOpen, Lock, Play, ShieldCheck } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { ADMIN_EMAIL } from "@/lib/users";
 
@@ -50,10 +51,20 @@ const audienceModes = [
 ];
 
 export default function AudiencePage() {
+  const router = useRouter();
   const { user } = useUser();
   const email = user?.primaryEmailAddress?.emailAddress ?? "";
   const isAdmin = email === ADMIN_EMAIL;
   const hasAccess = isAdmin;
+
+  function startSession(modeName: string) {
+    localStorage.setItem("speakflow_active_script", JSON.stringify({
+      content: "",
+      scenario: `Virtual Audience: ${modeName}`,
+      wordCount: 0,
+    }));
+    router.push("/dashboard/practice");
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -128,7 +139,7 @@ export default function AudiencePage() {
             <p className="text-xs text-[#636363] leading-relaxed mb-3">{description}</p>
 
             {hasAccess ? (
-              <button className="w-full text-center text-xs font-semibold bg-[#0056D2] hover:bg-[#003B8E] text-white py-2 rounded transition-colors flex items-center justify-center gap-1.5">
+              <button onClick={() => startSession(name)} className="w-full text-center text-xs font-semibold bg-[#0056D2] hover:bg-[#003B8E] text-white py-2 rounded transition-colors flex items-center justify-center gap-1.5">
                 <Play size={11} />
                 Start Session
               </button>

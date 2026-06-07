@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Wand2, Copy, RotateCcw, Save, CheckCircle, ChevronDown, ChevronUp, Sparkles, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Wand2, Copy, RotateCcw, Save, CheckCircle, ChevronDown, ChevronUp, Sparkles, Zap, Mic } from "lucide-react";
 
 // ─── 46 Scenarios ───────────────────────────────────────────────
 const SCENARIOS = [
@@ -164,6 +165,7 @@ interface FormState {
 }
 
 export default function ScriptWriterPage() {
+  const router = useRouter();
   const [generated, setGenerated] = useState(false);
   const [script, setScript] = useState("");
   const [copied, setCopied] = useState(false);
@@ -236,6 +238,15 @@ export default function ScriptWriterPage() {
     navigator.clipboard.writeText(script).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function handleSendToPractice() {
+    localStorage.setItem("speakflow_active_script", JSON.stringify({
+      content: script,
+      scenario: form.scenario,
+      wordCount,
+    }));
+    router.push("/dashboard/practice");
   }
 
   function handleSave() {
@@ -435,6 +446,13 @@ export default function ScriptWriterPage() {
                 >
                   {saved ? <CheckCircle size={12} /> : <Save size={12} />}
                   {saved ? "Saved!" : "Save Script"}
+                </button>
+                <button
+                  onClick={handleSendToPractice}
+                  className="flex items-center gap-1 text-xs bg-[#00B37D] hover:bg-[#009066] text-white px-2.5 py-1.5 rounded transition-colors font-semibold"
+                >
+                  <Mic size={12} />
+                  Practice This
                 </button>
                 <button
                   onClick={() => { setScript(""); setGenerated(false); setSaved(false); }}

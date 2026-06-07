@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Mic, Square, BarChart2, BookOpen } from "lucide-react";
 import Link from "next/link";
 
-const mockScript = `Good morning, everyone. Thank you for joining today's Q3 project update.
+const DEFAULT_SCRIPT = `Good morning, everyone. Thank you for joining today's Q3 project update.
 
 I want to cover three key areas: our progress against quarterly targets, two blockers we're managing, and our plan for the next sprint.
 
@@ -13,11 +13,25 @@ To close: we are on track overall. Are there any questions on the blockers or th
 
 type State = "idle" | "recording" | "transcribing" | "analyzing" | "done";
 
+interface ActiveScript {
+  content: string;
+  scenario: string;
+  wordCount: number;
+}
+
 export default function PracticePage() {
   const [state, setState] = useState<State>("idle");
   const [seconds, setSeconds] = useState(0);
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState("");
+  const [activeScript, setActiveScript] = useState<ActiveScript | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("speakflow_active_script");
+      if (raw) setActiveScript(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, []);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -68,8 +82,11 @@ export default function PracticePage() {
         setTranscript(transcriptText);
       } catch {
         setError("Transcription failed. Using mock analysis.");
-        transcriptText = mockScript;
+        transcriptText = DEFAULT_SCRIPT;
       }
+
+      const currentScript = activeScript?.content ?? DEFAULT_SCRIPT;
+      const currentScenario = activeScript?.scenario ?? "Business Meeting Update";
 
       // Step 2: Analyze with GPT-4o
       setState("analyzing");
@@ -79,8 +96,8 @@ export default function PracticePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             transcript: transcriptText,
-            script: mockScript,
-            scenario: "Business Meeting Update",
+            script: currentScript,
+            scenario: currentScenario,
           }),
         });
         const analysis = await res.json();
@@ -131,17 +148,21 @@ export default function PracticePage() {
         <div className="bg-white border border-[#E0E0E0] rounded-lg p-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-[#1F1F1F]">Your Script</h2>
-            <span className="text-xs bg-[#E8F1FF] text-[#0056D2] px-2 py-0.5 rounded font-semibold">Business Meeting</span>
+            <span className="text-xs bg-[#E8F1FF] text-[#0056D2] px-2 py-0.5 rounded font-semibold">
+              {activeScript?.scenario ?? "Sample Script"}
+            </span>
           </div>
           <div className="bg-[#F5F5F5] rounded-lg p-4 text-sm text-[#1F1F1F] leading-relaxed whitespace-pre-wrap font-sans max-h-64 overflow-y-auto">
-            {mockScript}
+            {activeScript?.content ?? DEFAULT_SCRIPT}
           </div>
-          <p className="text-xs text-[#636363] mt-3">98 words · ~1m 20s</p>
+          <p className="text-xs text-[#636363] mt-3">
+            {activeScript?.wordCount ?? 98} words · ~{Math.max(1, Math.round((activeScript?.wordCount ?? 98) / 130))}m
+          </p>
 
           <div className="mt-4 pt-4 border-t border-[#E0E0E0]">
             <Link href="/dashboard/script-writer" className="inline-flex items-center gap-1.5 text-xs text-[#0056D2] font-semibold hover:underline">
               <BookOpen size={12} />
-              Use your own script from Script Writer
+              {activeScript ? "Change script in Script Writer" : "Use your own script from Script Writer"}
             </Link>
           </div>
         </div>
