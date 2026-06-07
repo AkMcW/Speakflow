@@ -9,10 +9,11 @@ interface ScoreRingProps {
 }
 
 export default function ScoreRing({ score, size = 80, strokeWidth = 7, label }: ScoreRingProps) {
+  const safeScore = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : 0;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-  const color = getScoreColor(score);
+  const offset = circumference - (safeScore / 100) * circumference;
+  const color = getScoreColor(safeScore);
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -40,7 +41,7 @@ export default function ScoreRing({ score, size = 80, strokeWidth = 7, label }: 
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-base font-bold text-[#1F1F1F]">{score}</span>
+          <span className="text-base font-bold text-[#1F1F1F]">{safeScore}</span>
         </div>
       </div>
       {label && <span className="text-xs text-[#636363] font-medium text-center">{label}</span>}

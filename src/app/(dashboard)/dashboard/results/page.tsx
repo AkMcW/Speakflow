@@ -60,7 +60,25 @@ export default function ResultsPage() {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("speakflow_analysis");
-      if (raw) setData(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        // Ensure all score fields are numbers, defaulting to 0 if missing
+        const scores = parsed.scores ?? {};
+        parsed.scores = {
+          pronunciation: Number(scores.pronunciation) || 0,
+          fluency: Number(scores.fluency) || 0,
+          confidence: Number(scores.confidence) || 0,
+          structure: Number(scores.structure) || 0,
+          vocabulary: Number(scores.vocabulary) || 0,
+          pace: Number(scores.pace) || 0,
+          overall: Number(scores.overall) || 0,
+        };
+        parsed.fillerWords = parsed.fillerWords ?? { count: 0, words: [] };
+        parsed.strengths = Array.isArray(parsed.strengths) ? parsed.strengths : [];
+        parsed.improvements = Array.isArray(parsed.improvements) ? parsed.improvements : [];
+        parsed.wpm = Number(parsed.wpm) || 0;
+        setData(parsed);
+      }
     } catch {
       // ignore
     }
