@@ -1,7 +1,16 @@
+"use client";
 import Link from "next/link";
 import { Mic2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    router.push("/dashboard");
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
@@ -19,7 +28,7 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-white rounded-xl border border-[#E0E0E0] shadow-sm p-8">
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-[#1F1F1F] mb-1.5">
                 Email address

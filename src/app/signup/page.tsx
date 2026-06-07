@@ -1,5 +1,7 @@
+"use client";
 import Link from "next/link";
 import { Mic2, CheckCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const plans = [
   {
@@ -17,6 +19,13 @@ const plans = [
 ];
 
 export default function SignupPage() {
+  const router = useRouter();
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    router.push("/dashboard");
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
@@ -33,7 +42,7 @@ export default function SignupPage() {
         </div>
 
         <div className="bg-white rounded-xl border border-[#E0E0E0] shadow-sm p-8">
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="name" className="block text-sm font-semibold text-[#1F1F1F] mb-1.5">
                 Full name
@@ -78,11 +87,7 @@ export default function SignupPage() {
               <p className="text-sm font-semibold text-[#1F1F1F] mb-2">Choose your plan</p>
               <div className="grid grid-cols-2 gap-3">
                 {plans.map((plan) => (
-                  <label
-                    key={plan.id}
-                    className="cursor-pointer"
-                    htmlFor={`plan-${plan.id}`}
-                  >
+                  <label key={plan.id} className="cursor-pointer" htmlFor={`plan-${plan.id}`}>
                     <input
                       type="radio"
                       id={`plan-${plan.id}`}
