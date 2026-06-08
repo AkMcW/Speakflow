@@ -40,7 +40,10 @@ export default function PracticePage() {
     setError("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      // Pick a MIME type Whisper supports; fall back to browser default
+      const mimeType = ["audio/webm", "audio/mp4", "audio/ogg", "audio/wav"]
+        .find((m) => MediaRecorder.isTypeSupported(m)) ?? "";
+      const mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -69,13 +72,14 @@ export default function PracticePage() {
     setState("transcribing");
 
     mediaRecorder.onstop = async () => {
-      const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
+      const mimeType = mediaRecorder.mimeType || "audio/webm";
+      const audioBlob = new Blob(chunksRef.current, { type: mimeType });
 
       // Step 1: Transcribe with Whisper
       let transcriptText = "";
       try {
         const formData = new FormData();
-        formData.append("audio", audioBlob, "recording.webm");
+        formData.append("audio", audioBlob, "recording.webm");  // server detects ext from mime
         const res = await fetch("/api/practice/transcribe", { method: "POST", body: formData });
         const data = await res.json();
         if (!res.ok || data.error) throw new Error(data.error ?? "Transcription failed");
