@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
   try {
     const { transcript, script, scenario } = await req.json();
 
-    if (!transcript || transcript.trim().length < 5) {
-      return NextResponse.json({ error: "Transcript too short to analyze. Please record a longer response." }, { status: 400 });
+    if (!transcript || !transcript.trim()) {
+      return NextResponse.json({ error: "No speech detected. Please check your microphone and try again." }, { status: 400 });
     }
 
     const prompt = `You are an expert speech coach and communication trainer. Analyze this speech transcript and provide detailed feedback.

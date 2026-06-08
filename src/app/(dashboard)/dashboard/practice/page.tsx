@@ -78,11 +78,15 @@ export default function PracticePage() {
         formData.append("audio", audioBlob, "recording.webm");
         const res = await fetch("/api/practice/transcribe", { method: "POST", body: formData });
         const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error ?? "Transcription failed");
         transcriptText = data.transcript || "";
+        if (!transcriptText.trim()) throw new Error("No speech detected — please check your microphone and speak clearly");
         setTranscript(transcriptText);
-      } catch {
-        setError("Transcription failed. Using mock analysis.");
-        transcriptText = DEFAULT_SCRIPT;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Transcription failed";
+        setError(msg);
+        setState("idle");
+        return;
       }
 
       const currentScript = activeScript?.content ?? DEFAULT_SCRIPT;

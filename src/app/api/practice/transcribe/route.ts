@@ -18,9 +18,11 @@ export async function POST(req: NextRequest) {
       file: audio,
       model: "whisper-1",
       response_format: "text",
+      language: "en",
     });
 
-    return NextResponse.json({ transcript: transcription });
+    const transcript = typeof transcription === "string" ? transcription.trim() : String(transcription).trim();
+    return NextResponse.json({ transcript });
   } catch (err) {
     console.error("Transcription error:", err);
     return NextResponse.json({ error: "Transcription failed" }, { status: 500 });
