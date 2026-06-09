@@ -15,7 +15,14 @@ export async function POST(req: NextRequest) {
         {
           role: "system",
           content:
-            "You are an expert speech writer. Rewrite or improve the provided speaking script based on the instruction. Keep it natural and speakable. Return only the improved script — no commentary.",
+            `You are an expert speech writer. Rewrite or improve the provided speaking script based on the instruction. Keep it natural and speakable. Return only the improved script — no commentary.
+
+The script may contain speaking notation markers — preserve and improve them as needed:
+/ = short pause, // = medium pause, /// = long pause
+**word** = emphasis (stress this word)
+[SLOW] [FAST] [QUIET] [STRONG] = pace/voice cues
+[SMILE] [STEP FORWARD] [LOOK LEFT] [LOOK RIGHT] = physical cues
+If the original has no notation, add appropriate markers throughout the rewritten script.`,
         },
         {
           role: "user",
