@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, FileText, Mic, BarChart2, BookOpen,
-  Briefcase, Monitor, Users, Settings, CreditCard, Save, Mic2, ShieldCheck
+  Briefcase, Monitor, Users, Settings, CreditCard, Save, Mic2, ShieldCheck, Bot, AudioLines
 } from "lucide-react";
 import { useUser as useClerkUser } from "@clerk/nextjs";
 import { ADMIN_EMAIL, PLAN_FEATURES } from "@/lib/users";
@@ -16,6 +16,8 @@ const navSections = [
       { label: "Script Writer", href: "/dashboard/script-writer", icon: FileText, feature: "canUseScriptWriter" },
       { label: "Practice", href: "/dashboard/practice", icon: Mic, feature: "canUsePractice" },
       { label: "Saved Scripts", href: "/dashboard/saved-scripts", icon: Save, feature: null },
+      { label: "Recordings", href: "/dashboard/records", icon: AudioLines, feature: null },
+      { label: "AI Coach", href: "/dashboard/ai-coach", icon: Bot, feature: null },
       { label: "Progress", href: "/dashboard/progress", icon: BarChart2, feature: "canUseProgress" },
     ],
   },

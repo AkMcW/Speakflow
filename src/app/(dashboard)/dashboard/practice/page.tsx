@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Mic, Square, BarChart2, BookOpen } from "lucide-react";
 import Link from "next/link";
+import { saveRecording } from "@/lib/recordings";
 
 const DEFAULT_SCRIPT = `Good morning, everyone. Thank you for joining today's Q3 project update.
 
@@ -25,6 +26,7 @@ export default function PracticePage() {
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState("");
   const [activeScript, setActiveScript] = useState<ActiveScript | null>(null);
+  const secondsRef = useRef(0);
 
   useEffect(() => {
     try {
@@ -54,7 +56,8 @@ export default function PracticePage() {
       mediaRecorder.start(100);
       setState("recording");
       setSeconds(0);
-      intervalRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
+      secondsRef.current = 0;
+      intervalRef.current = setInterval(() => { secondsRef.current += 1; setSeconds((s) => s + 1); }, 1000);
     } catch {
       setError("Microphone access denied. Please allow microphone access and try again.");
     }
@@ -111,11 +114,23 @@ export default function PracticePage() {
         const analysis = await res.json();
         if (!res.ok || analysis.error || !analysis.scores) throw new Error(analysis.error ?? "No scores returned");
         sessionStorage.setItem("speakflow_analysis", JSON.stringify({ ...analysis, transcript: transcriptText }));
+        // Save recording to IndexedDB
+        try {
+          await saveRecording({
+            scenario: currentScenario,
+            transcript: transcriptText,
+            duration: secondsRef.current,
+            wpm: analysis.wpm ?? 0,
+            overallScore: analysis.scores?.overall ?? 0,
+            audioBlob,
+            mimeType,
+            createdAt: new Date().toISOString(),
+          });
+        } catch { /* non-critical */ }
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Analysis failed";
         console.error("Analysis error:", msg);
         setError(`AI analysis failed: ${msg}. Showing sample scores.`);
-        // Fall back to mock results so the results page still loads
         sessionStorage.setItem("speakflow_analysis", JSON.stringify({
           scores: { pronunciation: 74, fluency: 81, confidence: 68, structure: 77, vocabulary: 72, pace: 83, overall: 76 },
           fillerWords: { count: 3, words: ["um", "uh", "like"] },
