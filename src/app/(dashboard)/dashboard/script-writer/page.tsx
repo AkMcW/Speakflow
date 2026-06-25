@@ -304,20 +304,30 @@ export default function ScriptWriterPage() {
     router.push("/dashboard/practice");
   }
 
-  function handleSave() {
-    const saved_scripts = JSON.parse(localStorage.getItem("speakflow_scripts") || "[]");
-    saved_scripts.unshift({
-      id: Date.now(),
-      title: form.goal?.slice(0, 60) || form.scenario,
-      scenario: form.scenario,
-      content: script,
-      wordCount,
-      duration: form.duration,
-      createdAt: new Date().toISOString(),
-    });
-    localStorage.setItem("speakflow_scripts", JSON.stringify(saved_scripts.slice(0, 50)));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  async function handleSave() {
+    if (!script.trim()) return;
+    setSaved(false);
+    try {
+      const res = await fetch("/api/scripts/saved", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: form.goal?.slice(0, 60) || form.scenario,
+          scenario: form.scenario,
+          content: script,
+          wordCount,
+          duration: form.duration,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Save failed");
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save script");
+    }
   }
 
   const estimatedDuration = Math.round(wordCount / 130);
