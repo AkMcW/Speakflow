@@ -34,6 +34,7 @@ const navSections = [
     label: "Practice Modes",
     items: [
       { label: "IELTS Speaking", href: "/dashboard/ielts", icon: BookOpen, feature: "canUseIELTS" },
+      { label: "PTE Academic", href: "/dashboard/pte", icon: BookMarked, feature: "canUsePTE" },
       { label: "Interview", href: "/dashboard/interview", icon: Briefcase, feature: "canUseInterview" },
       { label: "Presentation", href: "/dashboard/presentation", icon: Monitor, feature: "canUsePresentation" },
       { label: "Virtual Audience", href: "/dashboard/audience", icon: Users, feature: "canUseAudience" },

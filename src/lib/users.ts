@@ -19,6 +19,7 @@ export const PLAN_FEATURES: Record<Plan, {
   canUseScriptWriter: boolean;
   canUsePractice: boolean;
   canUseIELTS: boolean;
+  canUsePTE: boolean;
   canUseInterview: boolean;
   canUsePresentation: boolean;
   canUseAudience: boolean;
@@ -32,6 +33,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseScriptWriter: true,
     canUsePractice: true,
     canUseIELTS: false,
+    canUsePTE: false,
     canUseInterview: false,
     canUsePresentation: false,
     canUseAudience: false,
@@ -45,6 +47,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseScriptWriter: true,
     canUsePractice: true,
     canUseIELTS: false,
+    canUsePTE: false,
     canUseInterview: true,
     canUsePresentation: true,
     canUseAudience: false,
@@ -58,6 +61,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseScriptWriter: true,
     canUsePractice: true,
     canUseIELTS: true,
+    canUsePTE: true,
     canUseInterview: true,
     canUsePresentation: true,
     canUseAudience: false,
@@ -71,6 +75,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseScriptWriter: true,
     canUsePractice: true,
     canUseIELTS: true,
+    canUsePTE: true,
     canUseInterview: true,
     canUsePresentation: true,
     canUseAudience: true,
@@ -84,6 +89,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseScriptWriter: true,
     canUsePractice: true,
     canUseIELTS: true,
+    canUsePTE: true,
     canUseInterview: true,
     canUsePresentation: true,
     canUseAudience: true,
@@ -97,6 +103,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseScriptWriter: true,
     canUsePractice: true,
     canUseIELTS: true,
+    canUsePTE: true,
     canUseInterview: true,
     canUsePresentation: true,
     canUseAudience: true,
