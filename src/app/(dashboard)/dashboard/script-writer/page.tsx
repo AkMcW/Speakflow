@@ -109,6 +109,51 @@ const PRESETS = [
     icon: "🥂",
     form: { scenario: "Wedding Speech", goal: "Give a heartfelt and funny best man / maid of honor wedding toast. Share a story about the couple, express love, and raise a toast.", audience: "Wedding Guests", tone: "Warm & Humorous", duration: "2min", style: "" },
   },
+  {
+    label: "Product Demo Opener",
+    icon: "🖥️",
+    form: { scenario: "Product Demo", goal: "Open a live product demo. Hook the audience with the core problem, show empathy, and transition smoothly into the live demonstration.", audience: "Potential Clients", tone: "Conversational", duration: "1min", style: "" },
+  },
+  {
+    label: "Crisis Communication",
+    icon: "🚨",
+    form: { scenario: "Crisis Communication", goal: "Address a service outage or product issue to customers. Acknowledge the problem, take ownership, explain what happened, and outline the fix.", audience: "Customers", tone: "Empathetic", duration: "2min", style: "" },
+  },
+  {
+    label: "Scholarship Interview",
+    icon: "🏅",
+    form: { scenario: "Scholarship Interview", goal: "Introduce myself and explain why I deserve this scholarship. Cover academic achievements, community involvement, and future goals.", audience: "Scholarship Panel", tone: "Confident", duration: "2min", style: "" },
+  },
+  {
+    label: "Team Motivational Briefing",
+    icon: "💪",
+    form: { scenario: "Team Briefing", goal: "Motivate the team at the start of a challenging project. Acknowledge the difficulty ahead, remind them of past wins, and build excitement for what's coming.", audience: "Team Members", tone: "Inspirational", duration: "2min", style: "" },
+  },
+  {
+    label: "Negotiation Opening",
+    icon: "🤝",
+    form: { scenario: "Negotiation Opening", goal: "Open a high-stakes contract negotiation. Set a collaborative tone, state our position confidently, and invite a productive dialogue.", audience: "Business Partner", tone: "Professional", duration: "1min", style: "" },
+  },
+  {
+    label: "TED-style Talk Intro",
+    icon: "💬",
+    form: { scenario: "TED-style Talk", goal: "Open a TED-style talk with a personal story that reveals a surprising truth about human behaviour. Hook the audience in the first 30 seconds.", audience: "General Public", tone: "Inspirational", duration: "3min", style: "Simon Sinek — Start With Why framework, conceptual, repeating core ideas, simple powerful language" },
+  },
+  {
+    label: "Performance Self-Review",
+    icon: "📋",
+    form: { scenario: "Performance Review (Self)", goal: "Deliver a confident self-appraisal covering my top three achievements this year, one area I am actively improving, and my goals for next year.", audience: "Line Manager", tone: "Professional", duration: "2min", style: "" },
+  },
+  {
+    label: "Cold Call Introduction",
+    icon: "📞",
+    form: { scenario: "Cold Call Introduction", goal: "Deliver a 30-second cold call opener that earns a conversation. State who I am, the specific reason for calling, and end with a permission question.", audience: "Prospect", tone: "Conversational", duration: "30s", style: "" },
+  },
+  {
+    label: "Fundraising Appeal",
+    icon: "❤️",
+    form: { scenario: "Fundraising Appeal", goal: "Make an emotional fundraising appeal for a children's education charity. Tell a beneficiary story, share the impact of donations, and issue a clear call to action.", audience: "Donors", tone: "Empathetic", duration: "3min", style: "" },
+  },
 ];
 
 // ─── Famous Speaking Styles ─────────────────────────────────────
@@ -125,6 +170,16 @@ const STYLES = [
   { label: "Tony Robbins", value: "Tony Robbins — high energy, pattern interrupts, direct commands, empowering questions, bold certainty", emoji: "🔥" },
   { label: "Sheryl Sandberg", value: "Sheryl Sandberg — data-backed, authentic personal stories, leadership-focused, empowering professional tone", emoji: "👩‍💼" },
   { label: "Richard Feynman", value: "Richard Feynman — explain complex ideas simply, curious and playful, analogies, step-by-step reasoning", emoji: "🔬" },
+  { label: "Malala Yousafzai", value: "Malala Yousafzai — calm moral courage, personal narrative, universal values, simple direct language, quiet yet powerful conviction", emoji: "📖" },
+  { label: "Jordan Peterson", value: "Jordan Peterson — precise vocabulary, archetypal references, structured arguments, building complexity step-by-step, serious intellectual tone", emoji: "🦞" },
+  { label: "Gary Vaynerchuk", value: "Gary Vaynerchuk — raw and direct, high energy, street-smart authenticity, no-fluff hustle mindset, casual but urgent", emoji: "⚡" },
+  { label: "Satya Nadella", value: "Satya Nadella — empathetic leadership, growth mindset language, cultural transformation, humble and visionary, strategic clarity", emoji: "🌐" },
+  { label: "Nelson Mandela", value: "Nelson Mandela — dignified and measured, moral authority, reconciliation and unity, long-view perspective, quiet gravitas", emoji: "✊" },
+  { label: "Amy Cuddy", value: "Amy Cuddy — research-backed storytelling, personal vulnerability, accessible science, empowering and practical, relatable examples", emoji: "🧠" },
+  { label: "Seth Godin", value: "Seth Godin — short punchy sentences, counterintuitive insight, marketing philosophy, memorable metaphors, challenges assumptions", emoji: "🟣" },
+  { label: "Chimamanda Ngozi Adichie", value: "Chimamanda Ngozi Adichie — rich storytelling, literary precision, cultural depth, warm wit, challenges single narratives with nuance", emoji: "🌍" },
+  { label: "Jocko Willink", value: "Jocko Willink — extreme ownership, military directness, no excuses, short declarative sentences, disciplined and commanding tone", emoji: "🪖" },
+  { label: "Yuval Noah Harari", value: "Yuval Noah Harari — sweeping historical perspective, clear analytical prose, thought-provoking questions, connects big ideas across disciplines", emoji: "📚" },
 ];
 
 const AUDIENCES = [

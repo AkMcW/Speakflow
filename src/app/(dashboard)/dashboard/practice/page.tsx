@@ -44,6 +44,16 @@ const DIRECTIVE_COLORS: Record<string, string> = {
   "LOOK RIGHT": "bg-teal-100 text-teal-700",
 };
 
+function stripNotation(text: string): string {
+  return text
+    .replace(/\[(?:SLOW|FAST|SMILE|QUIET|STRONG|STEP FORWARD|LOOK LEFT|LOOK RIGHT)\]/g, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\/{1,3}/g, "")
+    .replace(/  +/g, " ")
+    .replace(/ ([,.])/g, "$1")
+    .trim();
+}
+
 function renderNotation(text: string, fontSize: FontSize) {
   // Split into lines then process tokens within each line
   const lines = text.split("\n");
@@ -313,7 +323,7 @@ export default function PracticePage() {
           style={{ minHeight: "260px", maxHeight: "480px" }}>
           {notationOn
             ? renderNotation(scriptContent, fontSize)
-            : <p className="whitespace-pre-wrap text-[#1F1F1F]">{scriptContent}</p>
+            : <p className="whitespace-pre-wrap text-[#1F1F1F]">{stripNotation(scriptContent)}</p>
           }
         </div>
 
