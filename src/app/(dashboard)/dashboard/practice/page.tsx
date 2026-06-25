@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Mic, Square, BarChart2, BookOpen, Type, ToggleLeft, ToggleRight } from "lucide-react";
+import { Mic, Square, BarChart2, BookOpen, Type, ToggleLeft, ToggleRight, Video, VideoOff } from "lucide-react";
 import Link from "next/link";
 import { saveRecording } from "@/lib/recordings";
 
@@ -13,6 +13,13 @@ On progress: we completed the backend API integration last Friday — three days
 To close: [SLOW] we are on track overall. /// Are there any questions on the blockers or the release timeline? [LOOK LEFT] [LOOK RIGHT]`;
 
 type State = "idle" | "recording" | "transcribing" | "analyzing" | "done";
+
+function saveAnalysisForCompare() {
+  try {
+    const cur = sessionStorage.getItem("speakflow_analysis");
+    if (cur) sessionStorage.setItem("speakflow_analysis_prev", cur);
+  } catch { /* ignore */ }
+}
 
 interface ActiveScript {
   content: string;
@@ -151,7 +158,10 @@ export default function PracticePage() {
   const [activeScript, setActiveScript] = useState<ActiveScript | null>(null);
   const [fontSize, setFontSize] = useState<FontSize>("base");
   const [notationOn, setNotationOn] = useState(true);
+  const [webcamOn, setWebcamOn] = useState(false);
   const secondsRef = useRef(0);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoStreamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     try {
@@ -163,6 +173,28 @@ export default function PracticePage() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  async function toggleWebcam() {
+    if (webcamOn) {
+      videoStreamRef.current?.getTracks().forEach((t) => t.stop());
+      videoStreamRef.current = null;
+      if (videoRef.current) videoRef.current.srcObject = null;
+      setWebcamOn(false);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoStreamRef.current = stream;
+        if (videoRef.current) videoRef.current.srcObject = stream;
+        setWebcamOn(true);
+      } catch {
+        setError("Camera access denied. Please allow camera access and try again.");
+      }
+    }
+  }
+
+  useEffect(() => {
+    return () => { videoStreamRef.current?.getTracks().forEach((t) => t.stop()); };
+  }, []);
 
   async function startRecording() {
     setError("");
@@ -232,6 +264,7 @@ export default function PracticePage() {
         });
         const analysis = await res.json();
         if (!res.ok || analysis.error || !analysis.scores) throw new Error(analysis.error ?? "No scores returned");
+        saveAnalysisForCompare();
         sessionStorage.setItem("speakflow_analysis", JSON.stringify({ ...analysis, transcript: transcriptText }));
         try {
           await saveRecording({
@@ -316,6 +349,16 @@ export default function PracticePage() {
               : <ToggleLeft size={18} />}
             <span className={notationOn ? "text-[#0056D2]" : ""}>Notation</span>
           </button>
+
+          {/* Webcam toggle */}
+          <button
+            onClick={toggleWebcam}
+            className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${webcamOn ? "text-[#0056D2]" : "text-[#636363] hover:text-[#0056D2]"}`}
+            title="Toggle webcam"
+          >
+            {webcamOn ? <Video size={15} className="text-[#0056D2]" /> : <VideoOff size={15} />}
+            <span>Webcam</span>
+          </button>
         </div>
 
         {/* Script body */}
@@ -347,6 +390,24 @@ export default function PracticePage() {
           )}
         </div>
       </div>
+
+      {/* Webcam preview */}
+      {webcamOn && (
+        <div className="bg-white border border-[#E0E0E0] rounded-lg p-4 flex flex-col items-center gap-3">
+          <div className="flex items-center justify-between w-full">
+            <p className="text-sm font-semibold text-[#1F1F1F] flex items-center gap-1.5"><Video size={14} className="text-[#0056D2]" /> Camera Preview</p>
+            <button onClick={toggleWebcam} className="text-xs text-[#636363] hover:text-red-500 transition-colors">Turn off</button>
+          </div>
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            className="rounded-lg w-full max-w-sm aspect-video bg-black object-cover"
+          />
+          <p className="text-xs text-[#9E9E9E]">Practice eye contact and expressions while reading your script</p>
+        </div>
+      )}
 
       {/* Recording Panel — below the script */}
       <div className="bg-white border border-[#E0E0E0] rounded-lg p-6">

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ScoreRing from "@/components/ScoreRing";
-import { CheckCircle, Flag, ArrowRight, RotateCcw, Mic } from "lucide-react";
+import { CheckCircle, Flag, ArrowRight, RotateCcw, Mic, Share2, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface Analysis {
   scores: {
@@ -40,6 +40,28 @@ const FALLBACK: Analysis = {
   aiFeedback: "Overall, a solid delivery with good structure and pacing. Focus on reducing filler words and building confidence in your closing. Record yourself regularly to track improvement.",
 };
 
+function parseAnalysis(raw: string | null): Analysis | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    const scores = parsed.scores ?? {};
+    parsed.scores = {
+      pronunciation: Number(scores.pronunciation) || 0,
+      fluency: Number(scores.fluency) || 0,
+      confidence: Number(scores.confidence) || 0,
+      structure: Number(scores.structure) || 0,
+      vocabulary: Number(scores.vocabulary) || 0,
+      pace: Number(scores.pace) || 0,
+      overall: Number(scores.overall) || 0,
+    };
+    parsed.fillerWords = parsed.fillerWords ?? { count: 0, words: [] };
+    parsed.strengths = Array.isArray(parsed.strengths) ? parsed.strengths : [];
+    parsed.improvements = Array.isArray(parsed.improvements) ? parsed.improvements : [];
+    parsed.wpm = Number(parsed.wpm) || 0;
+    return parsed;
+  } catch { return null; }
+}
+
 function scoreColor(score: number) {
   if (score >= 80) return "text-[#00B37D]";
   if (score >= 60) return "text-[#F5A623]";
@@ -54,49 +76,40 @@ function scoreLabel(score: number) {
   return "Needs Work";
 }
 
+function Delta({ cur, prev }: { cur: number; prev: number }) {
+  const diff = cur - prev;
+  if (Math.abs(diff) < 1) return <Minus size={12} className="text-[#9E9E9E]" />;
+  if (diff > 0) return <span className="flex items-center gap-0.5 text-[#00B37D] text-xs font-bold"><TrendingUp size={12} />+{Math.round(diff)}</span>;
+  return <span className="flex items-center gap-0.5 text-red-400 text-xs font-bold"><TrendingDown size={12} />{Math.round(diff)}</span>;
+}
+
 export default function ResultsPage() {
   const [data, setData] = useState<Analysis | null>(null);
+  const [prev, setPrev] = useState<Analysis | null>(null);
+  const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("speakflow_analysis");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        // Ensure all score fields are numbers, defaulting to 0 if missing
-        const scores = parsed.scores ?? {};
-        parsed.scores = {
-          pronunciation: Number(scores.pronunciation) || 0,
-          fluency: Number(scores.fluency) || 0,
-          confidence: Number(scores.confidence) || 0,
-          structure: Number(scores.structure) || 0,
-          vocabulary: Number(scores.vocabulary) || 0,
-          pace: Number(scores.pace) || 0,
-          overall: Number(scores.overall) || 0,
-        };
-        parsed.fillerWords = parsed.fillerWords ?? { count: 0, words: [] };
-        parsed.strengths = Array.isArray(parsed.strengths) ? parsed.strengths : [];
-        parsed.improvements = Array.isArray(parsed.improvements) ? parsed.improvements : [];
-        parsed.wpm = Number(parsed.wpm) || 0;
-        setData(parsed);
-      }
-    } catch {
-      // ignore
-    }
+    setData(parseAnalysis(sessionStorage.getItem("speakflow_analysis")));
+    setPrev(parseAnalysis(sessionStorage.getItem("speakflow_analysis_prev")));
   }, []);
 
   const analysis = data ?? FALLBACK;
   const isFallback = !data;
 
-  const scoreRows = [
-    { label: "Pronunciation", score: analysis.scores.pronunciation },
-    { label: "Fluency", score: analysis.scores.fluency },
-    { label: "Confidence", score: analysis.scores.confidence },
-    { label: "Structure", score: analysis.scores.structure },
-    { label: "Vocabulary", score: analysis.scores.vocabulary },
-    { label: "Pace", score: analysis.scores.pace },
+  const scoreRows: { label: keyof Analysis["scores"]; display: string }[] = [
+    { label: "pronunciation", display: "Pronunciation" },
+    { label: "fluency", display: "Fluency" },
+    { label: "confidence", display: "Confidence" },
+    { label: "structure", display: "Structure" },
+    { label: "vocabulary", display: "Vocabulary" },
+    { label: "pace", display: "Pace" },
   ];
 
   const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+  function handleShare() {
+    window.open("/report", "_blank");
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -105,11 +118,27 @@ export default function ResultsPage() {
           <h1 className="text-2xl font-bold text-[#1F1F1F]">Session Results</h1>
           <p className="text-sm text-[#636363] mt-1">{today}</p>
         </div>
-        {analysis.wpm > 0 && (
-          <span className="text-xs bg-[#E8F1FF] text-[#0056D2] px-3 py-1 rounded-full font-semibold">
-            {analysis.wpm} wpm
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {analysis.wpm > 0 && (
+            <span className="text-xs bg-[#E8F1FF] text-[#0056D2] px-3 py-1 rounded-full font-semibold">
+              {analysis.wpm} wpm
+            </span>
+          )}
+          {prev && (
+            <button
+              onClick={() => setShowCompare((v) => !v)}
+              className={`text-xs font-semibold px-3 py-1 rounded-full border transition-colors ${showCompare ? "bg-[#0056D2] text-white border-[#0056D2]" : "border-[#0056D2] text-[#0056D2] hover:bg-[#E8F1FF]"}`}
+            >
+              {showCompare ? "Hide Compare" : "Compare to Last"}
+            </button>
+          )}
+          <button
+            onClick={handleShare}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded border border-[#E0E0E0] text-[#636363] hover:bg-[#F5F5F5] transition-colors"
+          >
+            <Share2 size={13} /> Share / Print
+          </button>
+        </div>
       </div>
 
       {isFallback && (
@@ -125,6 +154,12 @@ export default function ResultsPage() {
         <div className="flex items-center justify-center gap-4 mb-2">
           <span className="text-6xl font-bold text-[#1F1F1F]">{analysis.scores.overall}</span>
           <span className="text-2xl text-[#636363] font-light">/100</span>
+          {showCompare && prev && (
+            <div className="ml-4">
+              <p className="text-xs text-[#9E9E9E] mb-1">vs last session ({prev.scores.overall})</p>
+              <Delta cur={analysis.scores.overall} prev={prev.scores.overall} />
+            </div>
+          )}
         </div>
         <p className={`text-sm font-semibold ${scoreColor(analysis.scores.overall)}`}>
           {scoreLabel(analysis.scores.overall)}
@@ -134,6 +169,9 @@ export default function ResultsPage() {
             {analysis.fillerWords.count} filler word{analysis.fillerWords.count !== 1 ? "s" : ""} detected
             {analysis.fillerWords.words.length > 0 && (
               <> ({analysis.fillerWords.words.map(w => `"${w}"`).join(", ")})</>
+            )}
+            {showCompare && prev && prev.fillerWords.count > 0 && (
+              <span className="ml-2 text-[#9E9E9E]">(was {prev.fillerWords.count})</span>
             )}
           </p>
         )}
@@ -145,11 +183,38 @@ export default function ResultsPage() {
       {/* Score Rings */}
       <div className="bg-white border border-[#E0E0E0] rounded-lg p-6">
         <h2 className="font-bold text-[#1F1F1F] mb-5">Score Breakdown</h2>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 justify-items-center">
-          {scoreRows.map(({ label, score }) => (
-            <ScoreRing key={label} score={score} label={label} size={80} strokeWidth={7} />
-          ))}
-        </div>
+        {showCompare && prev ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-[#9E9E9E] border-b border-[#E0E0E0]">
+                  <th className="text-left pb-2">Dimension</th>
+                  <th className="text-center pb-2">Last</th>
+                  <th className="text-center pb-2">Now</th>
+                  <th className="text-center pb-2">Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scoreRows.map(({ label, display }) => (
+                  <tr key={label} className="border-b border-[#F5F5F5]">
+                    <td className="py-2 font-medium text-[#1F1F1F]">{display}</td>
+                    <td className="py-2 text-center text-[#636363]">{prev.scores[label]}</td>
+                    <td className={`py-2 text-center font-bold ${scoreColor(analysis.scores[label])}`}>{analysis.scores[label]}</td>
+                    <td className="py-2 text-center">
+                      <div className="flex justify-center"><Delta cur={analysis.scores[label]} prev={prev.scores[label]} /></div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 justify-items-center">
+            {scoreRows.map(({ label, display }) => (
+              <ScoreRing key={label} score={analysis.scores[label]} label={display} size={80} strokeWidth={7} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Transcript */}
@@ -228,6 +293,12 @@ export default function ResultsPage() {
         >
           View Progress
         </Link>
+        <button
+          onClick={handleShare}
+          className="flex items-center justify-center gap-2 border border-[#E0E0E0] text-[#636363] hover:bg-[#F5F5F5] font-semibold px-6 py-2.5 rounded transition-colors text-sm"
+        >
+          <Share2 size={14} /> Share Report
+        </button>
       </div>
     </div>
   );
