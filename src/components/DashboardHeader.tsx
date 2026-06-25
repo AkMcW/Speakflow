@@ -1,56 +1,93 @@
 "use client";
 import Link from "next/link";
-import { Bell, Mic2, ShieldCheck } from "lucide-react";
+import { Bell, Mic2, ShieldCheck, Sun, Moon, Menu } from "lucide-react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { ADMIN_EMAIL, PLAN_FEATURES } from "@/lib/users";
+import { useTheme } from "@/context/ThemeContext";
+import { useSidebar } from "@/context/SidebarContext";
 
 export default function DashboardHeader() {
   const { user } = useUser();
+  const { theme, toggle: toggleTheme } = useTheme();
+  const { toggle: toggleSidebar } = useSidebar();
   const email = user?.primaryEmailAddress?.emailAddress ?? "";
   const isAdmin = email === ADMIN_EMAIL;
   const planInfo = PLAN_FEATURES[isAdmin ? "admin" : "free"];
 
   return (
-    <header className="h-16 bg-white border-b border-[#E0E0E0] flex items-center justify-between px-4 sm:px-6">
-      {/* Mobile logo */}
-      <Link href="/dashboard" className="flex items-center gap-2 lg:hidden">
-        <div className="w-7 h-7 bg-[#0056D2] rounded-lg flex items-center justify-center">
-          <Mic2 size={15} className="text-white" />
-        </div>
-        <span className="font-bold text-sm text-[#1F1F1F]">SpeakFlow AI</span>
-      </Link>
-
-      <div className="hidden lg:block" />
-
+    <header
+      className="h-14 flex items-center justify-between px-4 sm:px-5 shrink-0 border-b"
+      style={{ background: "var(--bg-sidebar)", borderColor: "var(--border)" }}
+    >
       <div className="flex items-center gap-3">
-        <button className="relative p-2 text-[#636363] hover:text-[#1F1F1F] hover:bg-[#F5F5F5] rounded transition-colors">
-          <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#0056D2] rounded-full"></span>
+        {/* Mobile menu + logo */}
+        <button
+          onClick={toggleSidebar}
+          className="lg:hidden p-1.5 rounded-lg transition-colors"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          <Menu size={18} />
+        </button>
+        <Link href="/dashboard" className="flex items-center gap-2 lg:hidden">
+          <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: "var(--accent)" }}>
+            <Mic2 size={13} className="text-white" />
+          </div>
+          <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>SpeakFlow</span>
+        </Link>
+        <div className="hidden lg:block" />
+      </div>
+
+      <div className="flex items-center gap-2">
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg transition-all duration-150"
+          style={{ color: "var(--text-secondary)", background: "transparent" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-hover)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
         </button>
 
+        {/* Notifications */}
+        <button
+          className="relative p-2 rounded-lg transition-all duration-150"
+          style={{ color: "var(--text-secondary)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-hover)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+        >
+          <Bell size={17} />
+          <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full" style={{ background: "var(--accent)" }} />
+        </button>
+
+        {/* Divider */}
+        <div className="w-px h-5 mx-1" style={{ background: "var(--border)" }} />
+
+        {/* User area */}
         <div className="flex items-center gap-2.5">
           <div className="hidden sm:block text-right">
             <div className="flex items-center justify-end gap-1.5">
-              <span className="text-xs font-semibold text-[#1F1F1F]">
+              <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
                 {user?.firstName ?? user?.username ?? "User"}
               </span>
               {isAdmin && (
-                <span className="text-[9px] font-bold bg-[#FFEBEE] text-[#E53935] px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                  <ShieldCheck size={9} />
-                  ADMIN
+                <span
+                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"
+                  style={{ background: "#FFF0F0", color: "#E53935" }}
+                >
+                  <ShieldCheck size={9} /> ADMIN
                 </span>
               )}
             </div>
-            <p className="text-xs font-medium" style={{ color: planInfo.color }}>
-              {planInfo.label} Plan
-            </p>
+            <p className="text-[11px] font-medium" style={{ color: planInfo.color }}>{planInfo.label}</p>
           </div>
 
           <UserButton
             appearance={{
               elements: {
                 avatarBox: "w-8 h-8",
-                userButtonPopoverCard: "shadow-lg border border-[#E0E0E0]",
+                userButtonPopoverCard: "shadow-lg",
               },
             }}
           />

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Mic, Square, BarChart2, BookOpen, Type, ToggleLeft, ToggleRight, Video, VideoOff } from "lucide-react";
+import { Mic, Square, BarChart2, BookOpen, Type, ToggleLeft, ToggleRight, Video, VideoOff, Languages } from "lucide-react";
 import Link from "next/link";
 import { saveRecording } from "@/lib/recordings";
 
@@ -50,6 +50,40 @@ const DIRECTIVE_COLORS: Record<string, string> = {
   "LOOK LEFT": "bg-teal-100 text-teal-700",
   "LOOK RIGHT": "bg-teal-100 text-teal-700",
 };
+
+// Common words with IPA pronunciation hints
+const PHONETIC_MAP: Record<string, string> = {
+  "the": "ðə", "this": "ðɪs", "that": "ðæt", "those": "ðoʊz", "these": "ðiːz", "them": "ðɛm", "there": "ðɛr", "then": "ðɛn", "though": "ðoʊ", "through": "θruː",
+  "think": "θɪŋk", "thank": "θæŋk", "three": "θriː", "things": "θɪŋz", "third": "θɜːrd",
+  "very": "ˈvɛri", "voice": "vɔɪs", "view": "vjuː", "value": "ˈvæljuː",
+  "world": "wɜːrld", "work": "wɜːrk", "word": "wɜːrd", "would": "wʊd", "will": "wɪl",
+  "right": "raɪt", "really": "ˈriːli", "ready": "ˈrɛdi", "result": "rɪˈzʌlt",
+  "question": "ˈkwɛstʃən", "quarter": "ˈkwɔːrtər", "quality": "ˈkwɒlɪti",
+  "schedule": "ˈʃɛdjuːl", "should": "ʃʊd", "share": "ʃɛr",
+  "just": "dʒʌst", "join": "dʒɔɪn", "judge": "dʒʌdʒ",
+  "measure": "ˈmɛʒər", "vision": "ˈvɪʒən",
+  "update": "ˈʌpdɛɪt", "overall": "ˌoʊvərˈɔːl", "ahead": "əˈhɛd",
+  "everyone": "ˈɛvriwʌn", "important": "ɪmˈpɔːrtənt",
+};
+
+function addPhonetics(text: string): React.ReactNode[] {
+  const words = text.split(/(\s+|[,\.!?;:—–])/);
+  return words.map((token, i) => {
+    const clean = token.toLowerCase().replace(/[^a-z]/g, "");
+    const ipa = PHONETIC_MAP[clean];
+    if (ipa) {
+      return (
+        <span key={i} className="relative inline-block group cursor-help">
+          <span className="border-b border-dotted border-[#0056D2]">{token}</span>
+          <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#1F1F1F] text-white text-[10px] font-mono px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+            /{ipa}/
+          </span>
+        </span>
+      );
+    }
+    return <span key={i}>{token}</span>;
+  });
+}
 
 function stripNotation(text: string): string {
   return text
@@ -158,6 +192,7 @@ export default function PracticePage() {
   const [activeScript, setActiveScript] = useState<ActiveScript | null>(null);
   const [fontSize, setFontSize] = useState<FontSize>("base");
   const [notationOn, setNotationOn] = useState(true);
+  const [phoneticOn, setPhoneticOn] = useState(false);
   const [webcamOn, setWebcamOn] = useState(false);
   const secondsRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -350,6 +385,16 @@ export default function PracticePage() {
             <span className={notationOn ? "text-[#0056D2]" : ""}>Notation</span>
           </button>
 
+          {/* Phonetic toggle */}
+          <button
+            onClick={() => setPhoneticOn((v) => !v)}
+            className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${phoneticOn ? "text-[#0056D2]" : "text-[#636363] hover:text-[#0056D2]"}`}
+            title="Show IPA phonetic hints on hover"
+          >
+            <Languages size={15} className={phoneticOn ? "text-[#0056D2]" : ""} />
+            <span>IPA</span>
+          </button>
+
           {/* Webcam toggle */}
           <button
             onClick={toggleWebcam}
@@ -365,8 +410,12 @@ export default function PracticePage() {
         <div className={`bg-[#F9FAFB] border border-[#E0E0E0] rounded-lg p-5 leading-relaxed overflow-y-auto ${fontSizeClass[fontSize]}`}
           style={{ minHeight: "260px", maxHeight: "480px" }}>
           {notationOn
-            ? renderNotation(scriptContent, fontSize)
-            : <p className="whitespace-pre-wrap text-[#1F1F1F]">{stripNotation(scriptContent)}</p>
+            ? phoneticOn
+              ? <div className="whitespace-pre-wrap leading-relaxed">{addPhonetics(stripNotation(scriptContent).replace(/\n/g, "\n"))}</div>
+              : renderNotation(scriptContent, fontSize)
+            : phoneticOn
+              ? <div className="whitespace-pre-wrap text-[#1F1F1F] leading-relaxed">{addPhonetics(stripNotation(scriptContent))}</div>
+              : <p className="whitespace-pre-wrap text-[#1F1F1F]">{stripNotation(scriptContent)}</p>
           }
         </div>
 
@@ -379,7 +428,12 @@ export default function PracticePage() {
               {activeScript ? "Change script" : "Use your own script"}
             </Link>
           </div>
-          {notationOn && (
+          {phoneticOn && (
+            <p className="text-[10px] text-[#0056D2] font-medium">
+              IPA hints on — hover underlined words to see pronunciation
+            </p>
+          )}
+          {notationOn && !phoneticOn && (
             <div className="flex flex-wrap items-center gap-2 text-[10px] text-[#9E9E9E]">
               <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#F5A623] inline-block" /> short pause</span>
               <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#F5A623] inline-block" /><span className="w-1.5 h-1.5 rounded-full bg-[#F5A623] inline-block" /> medium</span>
