@@ -5,12 +5,10 @@ export async function POST(req: NextRequest) {
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 500 });
   }
-  if (!process.env.ELEVENLABS_API_KEY) {
-    return NextResponse.json({ error: "ELEVENLABS_API_KEY is not configured." }, { status: 500 });
-  }
+  // ElevenLabs is optional — text-only responses still work without it
 
   try {
-    const { messages, voiceId } = await req.json();
+    const { messages, voiceId, systemOverride } = await req.json();
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -20,7 +18,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are an expert speech coach and communication trainer named "Coach Alex".
+          content: systemOverride ?? `You are an expert speech coach and communication trainer named "Coach Alex".
 You help users improve their speaking skills through conversation practice.
 Keep responses concise (2-4 sentences max) and conversational — you are speaking, not writing.
 Ask follow-up questions to keep the conversation flowing.
@@ -35,7 +33,10 @@ Be encouraging, warm, and professional.`,
 
     const replyText = completion.choices[0]?.message?.content ?? "I didn't catch that. Could you try again?";
 
-    // Convert to speech with ElevenLabs
+    // Convert to speech with ElevenLabs (optional — skip if no API key or voiceId is null)
+    if (!voiceId || !process.env.ELEVENLABS_API_KEY) {
+      return NextResponse.json({ text: replyText, audio: null });
+    }
     const voice = voiceId || "21m00Tcm4TlvDq8ikWAM"; // Rachel — warm, professional
     const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
       method: "POST",
