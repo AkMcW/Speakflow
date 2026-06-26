@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Mic, Square, BarChart2, BookOpen, Type, ToggleLeft, ToggleRight, Video, VideoOff, Languages } from "lucide-react";
+import { Mic, Square, BarChart2, BookOpen, Type, ToggleLeft, ToggleRight, Video, VideoOff, Languages, Printer, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import { saveRecording } from "@/lib/recordings";
 
@@ -194,6 +194,7 @@ export default function PracticePage() {
   const [notationOn, setNotationOn] = useState(true);
   const [phoneticOn, setPhoneticOn] = useState(false);
   const [webcamOn, setWebcamOn] = useState(false);
+  const [showBestPractices, setShowBestPractices] = useState(false);
   const secondsRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const videoStreamRef = useRef<MediaStream | null>(null);
@@ -544,7 +545,7 @@ export default function PracticePage() {
                   <p className="text-xs text-[#1F1F1F] leading-relaxed">{transcript}</p>
                 </div>
               )}
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <Link href="/dashboard/results" className="bg-[#0056D2] hover:bg-[#003B8E] text-white font-semibold px-5 py-2 rounded text-sm transition-colors">
                   View My Results
                 </Link>
@@ -553,6 +554,12 @@ export default function PracticePage() {
                   className="border border-[#0056D2] text-[#0056D2] hover:bg-[#E8F1FF] font-semibold px-5 py-2 rounded text-sm transition-colors"
                 >
                   Practice Again
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center gap-1.5 border border-[#E0E0E0] text-[#636363] hover:bg-[#F5F5F5] font-semibold px-4 py-2 rounded text-sm transition-colors"
+                >
+                  <Printer size={14} /> Print
                 </button>
               </div>
             </div>
@@ -610,6 +617,76 @@ export default function PracticePage() {
           <div className="flex items-start gap-2"><span className="w-5 h-5 rounded-full bg-[#0056D2] text-white flex items-center justify-center font-bold shrink-0 text-[10px]">2</span>OpenAI Whisper transcribes your speech to text</div>
           <div className="flex items-start gap-2"><span className="w-5 h-5 rounded-full bg-[#0056D2] text-white flex items-center justify-center font-bold shrink-0 text-[10px]">3</span>GPT-4o analyzes and scores your delivery</div>
         </div>
+      </div>
+
+      {/* Best Practices for Pitch Rehearsals */}
+      <div className="border border-[#E0E0E0] rounded-lg overflow-hidden">
+        <button
+          onClick={() => setShowBestPractices((v) => !v)}
+          className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#F5F5F5] transition-colors"
+        >
+          <div>
+            <p className="font-bold text-sm text-[#1F1F1F]">10 Best Practices for Pitch Rehearsals</p>
+            <p className="text-xs text-[#636363] mt-0.5">Proven techniques to make your rehearsals count</p>
+          </div>
+          {showBestPractices ? <ChevronUp size={16} className="text-[#636363] shrink-0" /> : <ChevronDown size={16} className="text-[#636363] shrink-0" />}
+        </button>
+        {showBestPractices && (
+          <div className="px-5 pb-5 border-t border-[#E0E0E0]">
+            <div className="overflow-x-auto mt-4">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-[#E0E0E0]">
+                    <th className="text-right pr-4 py-2 text-xs font-bold text-[#636363] w-8">#</th>
+                    <th className="text-left py-2 text-xs font-bold text-[#636363] w-48">Practice</th>
+                    <th className="text-left py-2 text-xs font-bold text-[#636363]">What to Do</th>
+                    <th className="text-left py-2 text-xs font-bold text-[#636363]">Why It Matters</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { n: 1, title: "Start with the one-sentence pitch", what: "Before rehearsing the full pitch, explain your idea in one clear sentence.", why: "If the core idea is unclear, the full pitch will feel confusing." },
+                    { n: 2, title: "Practice the opening 10 times", what: "Rehearse only the first 30–60 seconds until it feels natural.", why: "The opening decides whether the audience pays attention." },
+                    { n: 3, title: "Time every rehearsal", what: "Practice with a timer and stay within the required pitch length.", why: "A strong pitch is concise and controlled." },
+                    { n: 4, title: "Record yourself", what: "Use video or audio recording, then review your voice, pacing, body language, and clarity.", why: "What you think you said and what the audience hears are often different." },
+                    { n: 5, title: "Rehearse without reading", what: "Use bullet points instead of a full script.", why: "This makes the pitch sound natural, confident, and conversational." },
+                    { n: 6, title: "Stress-test the weak parts", what: "Identify confusing, boring, or overly technical sections and rehearse them separately.", why: "Great pitches are improved through targeted correction, not repeated from start to finish only." },
+                    { n: 7, title: "Practice tough Q&A", what: "Prepare answers for objections about price, market, competition, risk, traction, and execution.", why: "Many pitches are won or lost after the presentation during questions." },
+                    { n: 8, title: "Simplify the language", what: "Replace jargon with simple explanations, examples, analogies, and numbers.", why: "Clear beats clever. The audience should understand quickly." },
+                    { n: 9, title: "Rehearse with real people", what: "Present to friends, colleagues, mentors, or target users and ask what they remember.", why: "Audience feedback reveals what is actually landing." },
+                    { n: 10, title: "End with a strong ask", what: "Clearly state what you want: investment, approval, partnership, meeting, purchase, or feedback.", why: "A pitch without a clear ask creates interest but no action." },
+                  ].map(({ n, title, what, why }) => (
+                    <tr key={n} className="border-b border-[#F0F0F0] hover:bg-[#FAFAFA] transition-colors">
+                      <td className="text-right pr-4 py-3 text-xs font-bold text-[#0056D2] align-top">{n}</td>
+                      <td className="py-3 pr-4 align-top font-semibold text-[#1F1F1F] text-xs">{title}</td>
+                      <td className="py-3 pr-4 align-top text-[#636363] text-xs">{what}</td>
+                      <td className="py-3 align-top text-[#636363] text-xs">{why}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-6 bg-[#F7F7F8] rounded-lg p-4">
+              <p className="text-xs font-bold text-[#1F1F1F] mb-3">Best Pitch Rehearsal Flow</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "1. One-sentence pitch",
+                  "2. Full pitch with timer",
+                  "3. Record & review",
+                  "4. Fix weak sections",
+                  "5. Practice Q&A",
+                  "6. Rehearse with people",
+                  "7. Final version",
+                ].map((step) => (
+                  <span key={step} className="flex items-center gap-1.5 bg-white border border-[#E0E0E0] rounded-full px-3 py-1 text-xs font-medium text-[#1F1F1F]">
+                    {step}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

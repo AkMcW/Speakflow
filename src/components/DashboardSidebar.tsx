@@ -45,7 +45,7 @@ const navSections = [
     label: "Account",
     items: [
       { label: "Settings", href: "/dashboard/settings", icon: Settings, feature: null },
-      { label: "Billing", href: "/dashboard/settings", icon: CreditCard, feature: null },
+      { label: "Billing", href: "/dashboard/billing", icon: CreditCard, feature: null },
     ],
   },
 ];
