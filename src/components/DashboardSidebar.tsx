@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, FileText, Mic, BarChart2, BookOpen,
-  Briefcase, Monitor, Users, Settings, CreditCard, Save,
+  Briefcase, Monitor, Users, Settings, CreditCard, Save, Target,
   Mic2, ShieldCheck, Bot, AudioLines, BookMarked, Zap,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
@@ -36,6 +36,7 @@ const navSections = [
     items: [
       { label: "IELTS Speaking", href: "/dashboard/ielts", icon: BookOpen, feature: "canUseIELTS" },
       { label: "PTE Academic", href: "/dashboard/pte", icon: BookMarked, feature: "canUsePTE" },
+      { label: "Pitch Coach", href: "/dashboard/pitch", icon: Target, feature: "canUsePitchCoach" },
       { label: "Interview", href: "/dashboard/interview", icon: Briefcase, feature: "canUseInterview" },
       { label: "Presentation", href: "/dashboard/presentation", icon: Monitor, feature: "canUsePresentation" },
       { label: "Virtual Audience", href: "/dashboard/audience", icon: Users, feature: "canUseAudience" },
