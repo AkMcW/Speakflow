@@ -9,7 +9,7 @@ import { useSidebar } from "@/context/SidebarContext";
 export default function DashboardHeader() {
   const { user } = useUser();
   const { theme, toggle: toggleTheme } = useTheme();
-  const { toggle: toggleSidebar } = useSidebar();
+  const { toggleMobile } = useSidebar();
   const email = user?.primaryEmailAddress?.emailAddress ?? "";
   const isAdmin = email === ADMIN_EMAIL;
   const planInfo = PLAN_FEATURES[isAdmin ? "admin" : "free"];
@@ -22,7 +22,7 @@ export default function DashboardHeader() {
       <div className="flex items-center gap-3">
         {/* Mobile menu + logo */}
         <button
-          onClick={toggleSidebar}
+          onClick={toggleMobile}
           className="lg:hidden p-1.5 rounded-lg transition-colors"
           style={{ color: "var(--text-secondary)" }}
         >
