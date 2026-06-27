@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Zap, Briefcase, AlertTriangle, TrendingUp, MessageSquare,
   BarChart2 as BarChart, Users, Mic, Square, Clock, ChevronRight,
-  RotateCcw, Target, Flame, Shield, ArrowLeft,
+  RotateCcw, Target, Flame, Shield, ArrowLeft, Save, CheckCircle,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -289,6 +289,8 @@ export default function ChallengesPage() {
   const [result, setResult] = useState<ChallengeResult | null>(null);
   const [aiChallenge, setAiChallenge] = useState("");
   const [round1Transcript, setRound1Transcript] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recorder = useRecorder();
@@ -304,6 +306,7 @@ export default function ChallengesPage() {
     setResult(null);
     setAiChallenge("");
     setRound1Transcript("");
+    setSaved(false);
   }
 
   useEffect(() => { reset(); }, [selected, scenarioIdx]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -311,6 +314,38 @@ export default function ChallengesPage() {
 
   const challenge = selected!;
   const scenario = selected ? selected.scenarios[scenarioIdx] : null;
+
+  async function saveResult() {
+    if (!result || !challenge || saving || saved) return;
+    setSaving(true);
+    try {
+      await fetch("/api/practice/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scenario: `Challenge: ${challenge.label} — ${scenario?.title ?? ""}`,
+          transcript: round1Transcript,
+          scores: {
+            overall: result.overall,
+            ...Object.fromEntries(
+              Object.entries(result.scores).map(([k, v]) => [k.toLowerCase().replace(/\s+/g, "_"), v])
+            ),
+          },
+          fillerWords: { count: 0, words: [] },
+          wpm: 0,
+          durationSeconds: 0,
+          strengths: result.strengths,
+          improvements: result.improvements,
+          aiFeedback: result.feedback ?? "",
+        }),
+      });
+      setSaved(true);
+    } catch {
+      // silently fail
+    } finally {
+      setSaving(false);
+    }
+  }
 
   // ── Start prep countdown → auto-start recording ──
   function startPrep() {
@@ -757,7 +792,7 @@ export default function ChallengesPage() {
             </div>
           )}
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <button onClick={reset} className="flex items-center gap-2 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors" style={{ background: "var(--accent)" }}>
               <RotateCcw size={12} /> Try Again
             </button>
@@ -767,6 +802,14 @@ export default function ChallengesPage() {
               style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
             >
               Next Scenario
+            </button>
+            <button
+              onClick={saveResult}
+              disabled={saving || saved}
+              className="flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg border transition-colors disabled:opacity-60"
+              style={{ borderColor: saved ? "#00B37D" : "var(--border)", color: saved ? "#00B37D" : "var(--text-secondary)" }}
+            >
+              {saved ? <><CheckCircle size={12} /> Saved</> : saving ? "Saving..." : <><Save size={12} /> Save Result</>}
             </button>
           </div>
         </div>
