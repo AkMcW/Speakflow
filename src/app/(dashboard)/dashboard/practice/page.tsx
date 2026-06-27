@@ -217,15 +217,24 @@ export default function PracticePage() {
       setWebcamOn(false);
     } else {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+        });
         videoStreamRef.current = stream;
-        if (videoRef.current) videoRef.current.srcObject = stream;
         setWebcamOn(true);
+        // srcObject is set in the effect below after the video element mounts
       } catch {
         setError("Camera access denied. Please allow camera access and try again.");
       }
     }
   }
+
+  // Attach stream after <video> element renders (webcamOn flips to true first)
+  useEffect(() => {
+    if (webcamOn && videoRef.current && videoStreamRef.current) {
+      videoRef.current.srcObject = videoStreamRef.current;
+    }
+  }, [webcamOn]);
 
   useEffect(() => {
     return () => { videoStreamRef.current?.getTracks().forEach((t) => t.stop()); };
