@@ -7,7 +7,7 @@ import * as schema from "./schema";
 let _sql: NeonQueryFunction<false, false> | null = null;
 let _db: ReturnType<typeof drizzle> | null = null;
 
-function getSql() {
+export function getSql() {
   if (!_sql) {
     if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set");
     _sql = neon(process.env.DATABASE_URL);
@@ -32,10 +32,11 @@ export function sql(strings: TemplateStringsArray, ...values: unknown[]) {
   return getSql()(strings, ...values);
 }
 
-let tableReady = false;
+let scriptsTableReady = false;
+let sessionsTableReady = false;
 
 export async function ensureScriptsTable() {
-  if (tableReady) return;
+  if (scriptsTableReady) return;
   const s = getSql();
   await s`
     CREATE TABLE IF NOT EXISTS scripts (
@@ -51,5 +52,28 @@ export async function ensureScriptsTable() {
     )
   `;
   await s`CREATE INDEX IF NOT EXISTS scripts_user_id_idx ON scripts(user_id)`;
-  tableReady = true;
+  scriptsTableReady = true;
+}
+
+export async function ensurePracticeSessionsTable() {
+  if (sessionsTableReady) return;
+  const s = getSql();
+  await s`
+    CREATE TABLE IF NOT EXISTS practice_sessions (
+      id               SERIAL PRIMARY KEY,
+      user_id          TEXT NOT NULL,
+      scenario         TEXT NOT NULL DEFAULT '',
+      transcript       TEXT NOT NULL DEFAULT '',
+      scores           JSONB NOT NULL DEFAULT '{}',
+      filler_words     JSONB NOT NULL DEFAULT '{}',
+      wpm              INTEGER NOT NULL DEFAULT 0,
+      duration_seconds INTEGER NOT NULL DEFAULT 0,
+      strengths        JSONB NOT NULL DEFAULT '[]',
+      improvements     JSONB NOT NULL DEFAULT '[]',
+      ai_feedback      TEXT NOT NULL DEFAULT '',
+      created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await s`CREATE INDEX IF NOT EXISTS practice_sessions_user_id_idx ON practice_sessions(user_id)`;
+  sessionsTableReady = true;
 }

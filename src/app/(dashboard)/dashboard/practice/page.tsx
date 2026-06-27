@@ -310,6 +310,22 @@ export default function PracticePage() {
         if (!res.ok || analysis.error || !analysis.scores) throw new Error(analysis.error ?? "No scores returned");
         saveAnalysisForCompare();
         sessionStorage.setItem("speakflow_analysis", JSON.stringify({ ...analysis, transcript: transcriptText }));
+        // Persist to database (non-critical — fire and forget)
+        fetch("/api/practice/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scenario: currentScenario,
+            transcript: transcriptText,
+            scores: analysis.scores,
+            fillerWords: analysis.fillerWords,
+            wpm: analysis.wpm ?? 0,
+            durationSeconds: secondsRef.current,
+            strengths: analysis.strengths ?? [],
+            improvements: analysis.improvements ?? [],
+            aiFeedback: analysis.aiFeedback ?? "",
+          }),
+        }).catch(() => {});
         try {
           await saveRecording({
             scenario: currentScenario,
