@@ -5,7 +5,7 @@ import {
   LayoutDashboard, FileText, Mic, BarChart2, BookOpen,
   Briefcase, Monitor, Users, Settings, CreditCard, Save, Target,
   Mic2, ShieldCheck, Bot, AudioLines, BookMarked, Zap,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, Library, Wand2,
 } from "lucide-react";
 import { useUser as useClerkUser } from "@clerk/nextjs";
 import { ADMIN_EMAIL, PLAN_FEATURES } from "@/lib/users";
@@ -17,6 +17,8 @@ const navSections = [
     items: [
       { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, feature: null },
       { label: "Script Writer", href: "/dashboard/script-writer", icon: FileText, feature: "canUseScriptWriter" },
+      { label: "Script Library", href: "/dashboard/script-library", icon: Library, feature: null },
+      { label: "Script Generator", href: "/dashboard/script-generator", icon: Wand2, feature: null },
       { label: "Practice", href: "/dashboard/practice", icon: Mic, feature: "canUsePractice" },
       { label: "Saved Scripts", href: "/dashboard/saved-scripts", icon: Save, feature: null },
       { label: "Recordings", href: "/dashboard/records", icon: AudioLines, feature: null },

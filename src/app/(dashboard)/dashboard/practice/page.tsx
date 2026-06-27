@@ -200,6 +200,15 @@ export default function PracticePage() {
 
   useEffect(() => {
     try {
+      // Check sessionStorage for script passed from Script Library / Generator
+      const ssScript = sessionStorage.getItem("sf_practice_script");
+      const ssScenario = sessionStorage.getItem("sf_practice_scenario");
+      if (ssScript) {
+        sessionStorage.removeItem("sf_practice_script");
+        sessionStorage.removeItem("sf_practice_scenario");
+        setActiveScript({ content: ssScript, scenario: ssScenario || "Practice Session", wordCount: ssScript.split(/\s+/).length });
+        return;
+      }
       const raw = localStorage.getItem("speakflow_active_script");
       if (raw) setActiveScript(JSON.parse(raw));
     } catch { /* ignore */ }
