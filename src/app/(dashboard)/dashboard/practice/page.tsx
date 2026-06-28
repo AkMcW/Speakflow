@@ -386,11 +386,15 @@ export default function PracticePage() {
   const wordCount = activeScript?.wordCount ?? 98;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5">
+    <div className="max-w-6xl mx-auto space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-[#1F1F1F]">Practice Recorder</h1>
         <p className="text-sm text-[#636363] mt-1">Record your delivery — AI analyzes pronunciation, fluency, confidence and more.</p>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+        {/* ─── Left / main pane ─── */}
+        <div className="lg:col-span-2 space-y-5">
 
       {/* Script Panel — full width, enlarged */}
       <div className="bg-white border border-[#E0E0E0] rounded-lg p-6">
@@ -505,14 +509,19 @@ export default function PracticePage() {
         </div>
       )}
 
-      {/* Recording Panel — below the script */}
+        </div>{/* ─── end left pane ─── */}
+
+        {/* ─── Right pane sidebar ─── */}
+        <aside className="lg:col-span-1 space-y-5 lg:sticky lg:top-4">
+
+      {/* Recording Panel — "Ready to record" frame */}
       <div className="bg-white border border-[#E0E0E0] rounded-lg p-6">
         {error && (
           <div className="bg-[#FFEBEE] border border-[#FFCDD2] rounded-lg p-3 mb-5 text-xs text-[#E53935]">{error}</div>
         )}
 
         {state === "idle" && (
-          <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="flex flex-col items-center text-center gap-4">
             <button
               onClick={startRecording}
               className="w-20 h-20 rounded-full bg-[#0056D2] hover:bg-[#003B8E] text-white flex items-center justify-center transition-colors shadow-lg pulse-ring shrink-0"
@@ -613,7 +622,7 @@ export default function PracticePage() {
       {notationOn && (
         <div className="bg-white border border-[#E0E0E0] rounded-lg p-4">
           <p className="text-xs font-bold text-[#1F1F1F] mb-3">Speaking Notation Guide</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
               <p className="font-semibold text-[#636363] mb-1.5">Pauses</p>
               <div className="space-y-1 text-[#1F1F1F]">
@@ -654,12 +663,15 @@ export default function PracticePage() {
 
       <div className="bg-[#E8F1FF] rounded-lg p-4">
         <p className="text-sm font-semibold text-[#0056D2] mb-2">How AI analysis works</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-[#1F1F1F]">
+        <div className="grid grid-cols-1 gap-3 text-xs text-[#1F1F1F]">
           <div className="flex items-start gap-2"><span className="w-5 h-5 rounded-full bg-[#0056D2] text-white flex items-center justify-center font-bold shrink-0 text-[10px]">1</span>Your voice is recorded locally in the browser</div>
           <div className="flex items-start gap-2"><span className="w-5 h-5 rounded-full bg-[#0056D2] text-white flex items-center justify-center font-bold shrink-0 text-[10px]">2</span>OpenAI Whisper transcribes your speech to text</div>
           <div className="flex items-start gap-2"><span className="w-5 h-5 rounded-full bg-[#0056D2] text-white flex items-center justify-center font-bold shrink-0 text-[10px]">3</span>GPT-4o analyzes and scores your delivery</div>
         </div>
       </div>
+
+        </aside>{/* ─── end right pane ─── */}
+      </div>{/* ─── end grid ─── */}
     </div>
   );
 }
