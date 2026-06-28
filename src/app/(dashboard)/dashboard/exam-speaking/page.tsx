@@ -6,7 +6,7 @@ import {
   CheckCircle, AlertCircle, Lightbulb, Printer, Sparkles, BookOpen, Pause, Play, Volume2,
 } from "lucide-react";
 
-type Flow = "exam" | "task" | "ready" | "listening" | "prep" | "recording" | "transcribing" | "analyzing" | "report";
+type Flow = "exam" | "task" | "ready" | "listening" | "prep" | "recording" | "roleplay" | "transcribing" | "analyzing" | "report";
 
 interface ExamAttempt {
   id: number;
@@ -81,6 +81,155 @@ function ListenButton({ text }: { text: string }) {
   );
 }
 
+interface ConvMsg { role: "user" | "assistant"; content: string }
+
+// Multi-turn role-play (OET interlocutor). The AI plays the patient; the user
+// is the health professional. On finish, the user's turns are scored as one.
+function RoleplayConversation({
+  roleCard, color, onFinish, onCancel,
+}: { roleCard: string; color: string; onFinish: (userTranscript: string) => void; onCancel: () => void }) {
+  const [messages, setMessages] = useState<ConvMsg[]>([]);
+  const [thinking, setThinking] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [err, setErr] = useState("");
+  const recRef = useRef<MediaRecorder | null>(null);
+  const chunks = useRef<Blob[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  const systemOverride = `You are role-playing the PATIENT in an OET (Occupational English Test) speaking role-play. The user is the HEALTH PROFESSIONAL. Context for the scene (this describes the professional's brief; infer your patient character, concerns, and emotions from it):
+"""${roleCard}"""
+Stay fully in character as the patient. Be realistic and human: show your worry or confusion, ask natural questions, and react to what the professional actually says. Keep each reply to 1–3 sentences. Never coach, never break character, never mention OET. If the professional has addressed your concerns well, show realistic reassurance.`;
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, thinking]);
+  useEffect(() => () => { if (audioRef.current) audioRef.current.pause(); }, []);
+
+  function playAudio(b64: string) {
+    if (audioRef.current) audioRef.current.pause();
+    const audio = new Audio(`data:audio/mpeg;base64,${b64}`);
+    audioRef.current = audio;
+    setSpeaking(true);
+    audio.onended = () => setSpeaking(false);
+    audio.onerror = () => setSpeaking(false);
+    audio.play().catch(() => setSpeaking(false));
+  }
+
+  async function startRec() {
+    setErr("");
+    if (audioRef.current) { audioRef.current.pause(); setSpeaking(false); }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = ["audio/webm", "audio/mp4", "audio/ogg"].find((m) => MediaRecorder.isTypeSupported(m)) ?? "";
+      const mr = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      chunks.current = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunks.current.push(e.data); };
+      mr.start(250);
+      recRef.current = mr;
+      setRecording(true);
+    } catch { setErr("Microphone access denied."); }
+  }
+
+  async function stopRec() {
+    const mr = recRef.current;
+    if (!mr || mr.state === "inactive") return;
+    mr.stop();
+    mr.stream.getTracks().forEach((t) => t.stop());
+    setRecording(false);
+    await new Promise<void>((res) => { mr.onstop = () => res(); });
+    const blob = new Blob(chunks.current, { type: mr.mimeType || "audio/webm" });
+    const fd = new FormData();
+    fd.append("audio", blob, "turn.webm");
+    setThinking(true);
+    try {
+      const txRes = await fetch("/api/practice/transcribe", { method: "POST", body: fd });
+      const txData = await txRes.json();
+      if (!txRes.ok || !txData.transcript?.trim()) throw new Error(txData.error ?? "No speech detected — try again.");
+      const next = [...messages, { role: "user" as const, content: txData.transcript.trim() }];
+      setMessages(next);
+      const res = await fetch("/api/ai-coach", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: next, systemOverride }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error ?? "The patient didn't respond.");
+      setMessages((m) => [...m, { role: "assistant", content: data.text }]);
+      if (data.audio) playAudio(data.audio);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setThinking(false);
+    }
+  }
+
+  const userTurns = messages.filter((m) => m.role === "user").length;
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-4">
+      <button onClick={onCancel} className="flex items-center gap-1.5 text-sm" style={{ color: "var(--text-secondary)" }}>
+        <ArrowLeft size={15} /> End role-play
+      </button>
+
+      <Card className="!py-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "var(--text-secondary)" }}>Your role</p>
+        <p className="text-sm" style={{ color: "var(--text-primary)" }}>{roleCard}</p>
+      </Card>
+
+      <Card>
+        <div className="space-y-3 max-h-[42vh] overflow-y-auto pr-1">
+          {messages.length === 0 && (
+            <p className="text-sm text-center py-6" style={{ color: "var(--text-secondary)" }}>
+              You lead the consultation. Tap the mic and greet your patient to begin.
+            </p>
+          )}
+          {messages.map((m, i) => (
+            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div className="max-w-[80%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed"
+                style={m.role === "user"
+                  ? { background: color, color: "#fff", borderTopRightRadius: 4 }
+                  : { background: "var(--bg-secondary)", color: "var(--text-primary)", borderTopLeftRadius: 4 }}>
+                {m.role === "assistant" && <span className="block text-[10px] font-bold mb-0.5 opacity-70">🧑 Patient</span>}
+                {m.content}
+              </div>
+            </div>
+          ))}
+          {thinking && <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}><Loader2 size={13} className="animate-spin" /> Patient is responding…</p>}
+          <div ref={bottomRef} />
+        </div>
+      </Card>
+
+      {err && (
+        <div className="flex items-center gap-2 p-3 rounded-lg text-sm" style={{ background: "#FFF0F0", border: "1px solid #FFCDD2", color: "#E53935" }}>
+          <AlertCircle size={15} className="shrink-0" /> {err}
+        </div>
+      )}
+
+      <Card className="flex flex-col items-center gap-3">
+        {recording ? (
+          <button onClick={stopRec} className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-full">
+            <Square size={18} /> Send turn
+          </button>
+        ) : (
+          <button onClick={startRec} disabled={thinking || speaking}
+            className="w-16 h-16 rounded-full text-white flex items-center justify-center shadow-lg pulse-ring disabled:opacity-50"
+            style={{ background: color }}>
+            <Mic size={26} />
+          </button>
+        )}
+        <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+          {speaking ? "Patient is speaking…" : recording ? "Speak, then send your turn" : "Tap to speak your turn"}
+        </p>
+        {userTurns >= 2 && !recording && !thinking && (
+          <button onClick={() => onFinish(messages.filter((m) => m.role === "user").map((m) => m.content).join(" "))}
+            className="text-sm font-semibold px-5 py-2 rounded-full" style={{ background: "var(--accent)", color: "#fff" }}>
+            End & Score ({userTurns} turns)
+          </button>
+        )}
+      </Card>
+    </div>
+  );
+}
+
 export default function ExamSpeakingPage() {
   const [flow, setFlow] = useState<Flow>("exam");
   const [track, setTrack] = useState<ExamTrack | null>(null);
@@ -147,6 +296,7 @@ export default function ExamSpeakingPage() {
 
   function beginTask() {
     if (!task) return;
+    if (task.type === "roleplay") { setFlow("roleplay"); return; }
     if (task.type === "repeat-sentence") { playThenRecord(); return; }
     if (task.prepSeconds > 0) {
       setPrepLeft(task.prepSeconds);
@@ -244,6 +394,34 @@ export default function ExamSpeakingPage() {
     startRecording();
   }
 
+  async function finishRoleplay(userTranscript: string) {
+    if (!userTranscript.trim()) { setFlow("task"); return; }
+    setTranscript(userTranscript);
+    setFlow("analyzing");
+    try {
+      const res = await fetch("/api/exam/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transcript: userTranscript,
+          examId: track?.id, examName: track?.name,
+          taskName: task?.name, taskType: "roleplay", prompt,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Analysis failed");
+      setResult(data);
+      setFlow("report");
+      fetch("/api/exam/sessions", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ examId: track?.id, examName: track?.name, taskName: task?.name, nativeScore: data.nativeScore ?? "", scoreOutOf100: data.scoreOutOf100 ?? 0 }),
+      }).catch(() => {});
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Scoring failed");
+      setFlow("ready");
+    }
+  }
+
   // ── Exam selection ──
   if (flow === "exam") {
     return (
@@ -275,6 +453,27 @@ export default function ExamSpeakingPage() {
             </button>
           ))}
         </div>
+
+        {/* Score trend */}
+        {attempts && attempts.length > 1 && (() => {
+          const series = attempts.slice(0, 10).reverse();
+          const max = Math.max(100, ...series.map((a) => a.score_out_of_100));
+          return (
+            <Card>
+              <h2 className="font-bold mb-3 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+                <Clock size={16} style={{ color: "var(--accent)" }} /> Score Trend
+              </h2>
+              <div className="flex items-end gap-2 h-24">
+                {series.map((a) => (
+                  <div key={a.id} className="flex-1 flex flex-col items-center gap-1" title={`${a.exam_name}: ${a.native_score}`}>
+                    <div className="w-full rounded-t" style={{ height: `${(a.score_out_of_100 / max) * 100}%`, background: scoreColor(a.score_out_of_100), minHeight: 4 }} />
+                    <span className="text-[9px]" style={{ color: "var(--text-secondary)" }}>{new Date(a.created_at).toLocaleDateString("en-US", { month: "numeric", day: "numeric" })}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          );
+        })()}
 
         {/* Recent attempts */}
         {attempts && attempts.length > 0 && (
@@ -334,6 +533,11 @@ export default function ExamSpeakingPage() {
         </div>
       </div>
     );
+  }
+
+  // ── Role-play conversation (OET interlocutor) ──
+  if (flow === "roleplay" && track && task) {
+    return <RoleplayConversation roleCard={prompt} color={track.color} onFinish={finishRoleplay} onCancel={() => setFlow("ready")} />;
   }
 
   // ── Ready / prep / recording / processing ──
@@ -397,14 +601,14 @@ export default function ExamSpeakingPage() {
           {flow === "ready" && (
             <>
               <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                {isRepeat ? "Press play, listen once, then repeat the sentence." : task.prepSeconds > 0 ? `${task.prepSeconds}s preparation, then ${task.responseSeconds}s to respond.` : `Speak for up to ${task.responseSeconds}s.`}
+                {task.type === "roleplay" ? "A live role-play: you lead, the AI plays the patient. Speak turn by turn." : isRepeat ? "Press play, listen once, then repeat the sentence." : task.prepSeconds > 0 ? `${task.prepSeconds}s preparation, then ${task.responseSeconds}s to respond.` : `Speak for up to ${task.responseSeconds}s.`}
               </p>
               <button onClick={beginTask}
                 className="w-20 h-20 rounded-full text-white flex items-center justify-center shadow-lg pulse-ring transition-colors"
                 style={{ background: track.color }}>
                 {isRepeat ? <Play size={34} /> : <Mic size={34} />}
               </button>
-              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{isRepeat ? "Play the sentence" : task.prepSeconds > 0 ? "Start preparation" : "Start recording"}</p>
+              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{task.type === "roleplay" ? "Start role-play" : isRepeat ? "Play the sentence" : task.prepSeconds > 0 ? "Start preparation" : "Start recording"}</p>
             </>
           )}
           {flow === "listening" && (
