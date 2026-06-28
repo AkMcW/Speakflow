@@ -5,7 +5,7 @@ import {
   LayoutDashboard, FileText, Mic, BarChart2, BookOpen,
   Briefcase, Monitor, Users, Settings, CreditCard, Save, Target,
   Mic2, ShieldCheck, Bot, AudioLines, BookMarked, Zap,
-  ChevronLeft, ChevronRight, Library, Wand2,
+  ChevronLeft, ChevronRight, Library, Wand2, History,
 } from "lucide-react";
 import { useUser as useClerkUser } from "@clerk/nextjs";
 import { ADMIN_EMAIL, PLAN_FEATURES } from "@/lib/users";
@@ -24,6 +24,7 @@ const navSections = [
       { label: "Recordings", href: "/dashboard/records", icon: AudioLines, feature: null },
       { label: "AI Coach", href: "/dashboard/ai-coach", icon: Bot, feature: null },
       { label: "Challenges", href: "/dashboard/challenges", icon: Zap, feature: "canUseChallenges" },
+      { label: "Session Results", href: "/dashboard/session-results", icon: History, feature: null },
       { label: "Progress", href: "/dashboard/progress", icon: BarChart2, feature: "canUseProgress" },
     ],
   },

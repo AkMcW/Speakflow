@@ -71,9 +71,12 @@ export async function ensurePracticeSessionsTable() {
       strengths        JSONB NOT NULL DEFAULT '[]',
       improvements     JSONB NOT NULL DEFAULT '[]',
       ai_feedback      TEXT NOT NULL DEFAULT '',
+      analysis         JSONB NOT NULL DEFAULT '{}',
       created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+  // Backfill the analysis column for tables created before it existed
+  await s`ALTER TABLE practice_sessions ADD COLUMN IF NOT EXISTS analysis JSONB NOT NULL DEFAULT '{}'`;
   await s`CREATE INDEX IF NOT EXISTS practice_sessions_user_id_idx ON practice_sessions(user_id)`;
   sessionsTableReady = true;
 }

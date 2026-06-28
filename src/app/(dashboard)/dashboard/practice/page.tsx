@@ -319,6 +319,7 @@ export default function PracticePage() {
         if (!res.ok || analysis.error || !analysis.scores) throw new Error(analysis.error ?? "No scores returned");
         saveAnalysisForCompare();
         sessionStorage.setItem("speakflow_analysis", JSON.stringify({ ...analysis, transcript: transcriptText }));
+        sessionStorage.setItem("speakflow_analysis_scenario", currentScenario);
         // Persist to database (non-critical — fire and forget)
         fetch("/api/practice/sessions", {
           method: "POST",
@@ -333,6 +334,13 @@ export default function PracticePage() {
             strengths: analysis.strengths ?? [],
             improvements: analysis.improvements ?? [],
             aiFeedback: analysis.aiFeedback ?? "",
+            analysis: {
+              wordErrors: analysis.wordErrors ?? [],
+              pronunciationNotes: analysis.pronunciationNotes ?? [],
+              scriptComparison: analysis.scriptComparison ?? null,
+              nativeTip: analysis.nativeTip ?? "",
+              bandScore: analysis.bandScore ?? null,
+            },
           }),
         }).catch(() => {});
         try {
@@ -440,9 +448,9 @@ export default function PracticePage() {
           </button>
         </div>
 
-        {/* Script body */}
-        <div className={`bg-[#F9FAFB] border border-[#E0E0E0] rounded-lg p-5 leading-relaxed overflow-y-auto ${fontSizeClass[fontSize]}`}
-          style={{ minHeight: "260px", maxHeight: "480px" }}>
+        {/* Script body — resizable (drag bottom-right corner to adjust height) */}
+        <div className={`bg-[#F9FAFB] border border-[#E0E0E0] rounded-lg p-5 leading-relaxed overflow-y-auto resize-y ${fontSizeClass[fontSize]}`}
+          style={{ height: "420px", minHeight: "180px" }}>
           {notationOn
             ? phoneticOn
               ? <div className="whitespace-pre-wrap leading-relaxed">{addPhonetics(stripNotation(scriptContent).replace(/\n/g, "\n"))}</div>
@@ -573,7 +581,8 @@ export default function PracticePage() {
               <p className="font-bold text-[#1F1F1F] text-lg mb-1">Analysis Complete!</p>
               <p className="text-sm text-[#636363] mb-3">Your speech has been scored by AI.</p>
               {transcript && (
-                <div className="bg-[#F5F5F5] rounded-lg p-3 mb-4 max-h-20 overflow-y-auto">
+                <div className="bg-[#F5F5F5] rounded-lg p-3 mb-4 overflow-y-auto resize-y"
+                  style={{ height: "160px", minHeight: "60px" }}>
                   <p className="text-xs text-[#636363] font-semibold mb-1">Transcript:</p>
                   <p className="text-xs text-[#1F1F1F] leading-relaxed">{transcript}</p>
                 </div>

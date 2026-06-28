@@ -5,6 +5,7 @@ import ScoreRing from "@/components/ScoreRing";
 import {
   CheckCircle, Flag, ArrowRight, RotateCcw, Mic, Share2,
   TrendingUp, TrendingDown, Minus, AlertCircle, BookOpen, Zap,
+  Save, Loader2,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -138,11 +139,48 @@ export default function ResultsPage() {
   const [data, setData] = useState<Analysis | null>(null);
   const [prev, setPrev] = useState<Analysis | null>(null);
   const [showCompare, setShowCompare] = useState(false);
+  const [scenario, setScenario] = useState("Practice Session");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
     setData(parseAnalysis(sessionStorage.getItem("speakflow_analysis")));
     setPrev(parseAnalysis(sessionStorage.getItem("speakflow_analysis_prev")));
+    const sc = sessionStorage.getItem("speakflow_analysis_scenario");
+    if (sc) setScenario(sc);
   }, []);
+
+  async function saveResult() {
+    if (!data || saveState === "saving" || saveState === "saved") return;
+    setSaveState("saving");
+    try {
+      const res = await fetch("/api/practice/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scenario,
+          transcript: data.transcript ?? "",
+          scores: data.scores,
+          fillerWords: data.fillerWords,
+          wpm: data.wpm,
+          durationSeconds: 0,
+          strengths: data.strengths,
+          improvements: data.improvements,
+          aiFeedback: data.aiFeedback,
+          analysis: {
+            wordErrors: data.wordErrors ?? [],
+            pronunciationNotes: data.pronunciationNotes ?? [],
+            scriptComparison: data.scriptComparison ?? null,
+            nativeTip: data.nativeTip ?? "",
+            bandScore: data.bandScore ?? null,
+          },
+        }),
+      });
+      if (!res.ok) throw new Error("save failed");
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
+  }
 
   const analysis = data ?? FALLBACK;
   const isFallback = !data;
@@ -186,6 +224,21 @@ export default function ResultsPage() {
                 : { background: "transparent", color: "var(--accent)", borderColor: "var(--accent)" }}
             >
               {showCompare ? "Hide Compare" : "Compare to Last"}
+            </button>
+          )}
+          {!isFallback && (
+            <button
+              onClick={saveResult}
+              disabled={saveState === "saving" || saveState === "saved"}
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded border transition-colors disabled:opacity-80"
+              style={saveState === "saved"
+                ? { background: "#E6F7F2", color: "#00B37D", borderColor: "#00B37D" }
+                : { background: "var(--accent)", color: "#fff", borderColor: "var(--accent)" }}
+            >
+              {saveState === "saving" ? <><Loader2 size={13} className="animate-spin" /> Saving...</>
+                : saveState === "saved" ? <><CheckCircle size={13} /> Saved</>
+                : saveState === "error" ? <><AlertCircle size={13} /> Retry Save</>
+                : <><Save size={13} /> Save Result</>}
             </button>
           )}
           <button
