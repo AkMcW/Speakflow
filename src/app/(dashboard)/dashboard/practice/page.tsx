@@ -527,11 +527,6 @@ export default function PracticePage() {
             >
               <Mic size={34} />
             </button>
-            <div>
-              <p className="font-semibold text-[#1F1F1F] mb-1">Ready to record</p>
-              <p className="text-sm text-[#636363]">Press the button to start. Read your script aloud clearly — AI will transcribe and score your delivery.</p>
-              <p className="text-xs text-[#9E9E9E] mt-1">Microphone required · Browser-based recording</p>
-            </div>
           </div>
         )}
 
@@ -615,58 +610,6 @@ export default function PracticePage() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Notation legend — only when notation is on */}
-      {notationOn && (
-        <div className="bg-white border border-[#E0E0E0] rounded-lg p-4">
-          <p className="text-xs font-bold text-[#1F1F1F] mb-3">Speaking Notation Guide</p>
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div>
-              <p className="font-semibold text-[#636363] mb-1.5">Pauses</p>
-              <div className="space-y-1 text-[#1F1F1F]">
-                <div className="flex items-center gap-2"><code className="bg-[#F5F5F5] px-1 rounded">/</code> Short pause</div>
-                <div className="flex items-center gap-2"><code className="bg-[#F5F5F5] px-1 rounded">//</code> Medium pause</div>
-                <div className="flex items-center gap-2"><code className="bg-[#F5F5F5] px-1 rounded">///</code> Long pause</div>
-              </div>
-            </div>
-            <div>
-              <p className="font-semibold text-[#636363] mb-1.5">Emphasis</p>
-              <div className="space-y-1 text-[#1F1F1F]">
-                <div className="flex items-center gap-2"><code className="bg-[#F5F5F5] px-1 rounded">**word**</code> Stress this</div>
-              </div>
-            </div>
-            <div>
-              <p className="font-semibold text-[#636363] mb-1.5">Pace & Voice</p>
-              <div className="space-y-1">
-                {["SLOW","FAST","QUIET","STRONG"].map((d) => (
-                  <div key={d} className="flex items-center gap-1.5">
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${DIRECTIVE_COLORS[d]}`}>{d}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="font-semibold text-[#636363] mb-1.5">Physical</p>
-              <div className="space-y-1">
-                {["SMILE","STEP FORWARD","LOOK LEFT","LOOK RIGHT"].map((d) => (
-                  <div key={d} className="flex items-center gap-1.5">
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${DIRECTIVE_COLORS[d] ?? "bg-gray-100 text-gray-600"}`}>{d}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="bg-[#E8F1FF] rounded-lg p-4">
-        <p className="text-sm font-semibold text-[#0056D2] mb-2">How AI analysis works</p>
-        <div className="grid grid-cols-1 gap-3 text-xs text-[#1F1F1F]">
-          <div className="flex items-start gap-2"><span className="w-5 h-5 rounded-full bg-[#0056D2] text-white flex items-center justify-center font-bold shrink-0 text-[10px]">1</span>Your voice is recorded locally in the browser</div>
-          <div className="flex items-start gap-2"><span className="w-5 h-5 rounded-full bg-[#0056D2] text-white flex items-center justify-center font-bold shrink-0 text-[10px]">2</span>OpenAI Whisper transcribes your speech to text</div>
-          <div className="flex items-start gap-2"><span className="w-5 h-5 rounded-full bg-[#0056D2] text-white flex items-center justify-center font-bold shrink-0 text-[10px]">3</span>GPT-4o analyzes and scores your delivery</div>
-        </div>
       </div>
 
         </aside>{/* ─── end right pane ─── */}
