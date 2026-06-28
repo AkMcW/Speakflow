@@ -80,3 +80,25 @@ export async function ensurePracticeSessionsTable() {
   await s`CREATE INDEX IF NOT EXISTS practice_sessions_user_id_idx ON practice_sessions(user_id)`;
   sessionsTableReady = true;
 }
+
+let c2TableReady = false;
+
+export async function ensureC2SessionsTable() {
+  if (c2TableReady) return;
+  const s = getSql();
+  await s`
+    CREATE TABLE IF NOT EXISTS c2_sessions (
+      id            SERIAL PRIMARY KEY,
+      user_id       TEXT NOT NULL,
+      scenario      TEXT NOT NULL DEFAULT '',
+      challenge     TEXT NOT NULL DEFAULT '',
+      current_level TEXT NOT NULL DEFAULT '',
+      c2_readiness  INTEGER NOT NULL DEFAULT 0,
+      scores        JSONB NOT NULL DEFAULT '{}',
+      keeps_below   JSONB NOT NULL DEFAULT '[]',
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await s`CREATE INDEX IF NOT EXISTS c2_sessions_user_id_idx ON c2_sessions(user_id)`;
+  c2TableReady = true;
+}

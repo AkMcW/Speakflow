@@ -1,9 +1,10 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Mic, Square, Loader2, GraduationCap, ArrowLeft, RotateCcw, Sparkles,
   CheckCircle, AlertCircle, TrendingUp, BookOpen, Volume2, Music, Zap,
   MessageSquare, Target, Repeat, Lightbulb, Printer, Play, Pause,
+  CalendarDays, Flame, ListChecks,
 } from "lucide-react";
 
 // ─── Scenarios ────────────────────────────────────────────────────────────────
@@ -118,6 +119,33 @@ const SCORE_META: { key: string; label: string; color: string }[] = [
   { key: "culturalAppropriateness", label: "Cultural Appropriateness", color: "#7B61FF" },
 ];
 
+// Maps a weak score dimension to the drill that best targets it.
+const DIMENSION_FIX: Record<string, { challengeId?: string; tip: string }> = {
+  fluency: { challengeId: "spontaneous", tip: "Build flow with spontaneous, unprepared speaking." },
+  precision: { challengeId: "precision", tip: "Ban vague words — force specific, accurate vocabulary." },
+  complexity: { challengeId: "abstract", tip: "Stretch your sentence structure on abstract topics." },
+  naturalness: { challengeId: "formal-natural", tip: "Convert textbook English into natural spoken English." },
+  pronunciationClarity: { tip: "Practice scenarios and use the shadowing playback to sharpen clarity." },
+  intonation: { tip: "Shadow the C2 sentences and exaggerate stress on key words." },
+  rhythm: { tip: "Shadow at natural speed to internalize native-like timing." },
+  vocabularyRange: { challengeId: "precision", tip: "Review your vocabulary upgrades and reuse them aloud." },
+  idiomaticControl: { challengeId: "idiom", tip: "Run the Idiom Challenge to use expressions naturally." },
+  discourseControl: { challengeId: "executive", tip: "Use the Executive Summary drill for tight structure." },
+  confidence: { challengeId: "hostile-qa", tip: "Build composure with the Hostile Q&A challenge." },
+  culturalAppropriateness: { challengeId: "difficult", tip: "Practice tactful Difficult Conversations." },
+};
+
+interface C2SessionRow {
+  id: number;
+  scenario: string;
+  challenge: string;
+  current_level: string;
+  c2_readiness: number;
+  scores: Record<string, number>;
+  keeps_below: string[];
+  created_at: string;
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface C2Result {
   currentLevel: string;
@@ -142,7 +170,7 @@ type Flow =
   | "scenario" | "ready" | "recording" | "transcribing" | "analyzing" | "report"
   | "think-intro" | "think-prompt" | "think-recording" | "think-transcribing" | "think-feedback";
 
-type LandingTab = "scenarios" | "challenges" | "think";
+type LandingTab = "scenarios" | "challenges" | "think" | "plan";
 
 interface ThinkFeedback {
   naturalness: number;
@@ -163,6 +191,63 @@ function readinessColor(v: number) {
   if (v >= 70) return "#0056D2";
   if (v >= 55) return "#F5A623";
   return "#E53935";
+}
+
+function dayKey(iso: string) { return new Date(iso).toISOString().slice(0, 10); }
+
+interface FluencyPlan {
+  total: number;
+  weekCount: number;
+  latest: number;
+  avgReadiness: number;
+  trend: number;
+  streak: number;
+  weakAreas: { key: string; label: string; avg: number; tip: string; challengeId?: string }[];
+  recent: { value: number; date: string }[];
+}
+
+function computePlan(sessions: C2SessionRow[]): FluencyPlan {
+  const now = Date.now();
+  const weekAgo = now - 7 * 86400000;
+  const week = sessions.filter((s) => new Date(s.created_at).getTime() >= weekAgo);
+  const recentN = sessions.slice(0, 8);
+  const avgReadiness = recentN.length
+    ? Math.round(recentN.reduce((a, s) => a + (s.c2_readiness || 0), 0) / recentN.length) : 0;
+
+  // Trend: last 3 vs previous 3
+  const last3 = sessions.slice(0, 3);
+  const prev3 = sessions.slice(3, 6);
+  const avg = (arr: C2SessionRow[]) => arr.length ? arr.reduce((a, s) => a + (s.c2_readiness || 0), 0) / arr.length : 0;
+  const trend = last3.length && prev3.length ? Math.round(avg(last3) - avg(prev3)) : 0;
+
+  // Streak of consecutive days ending today or yesterday
+  const days = new Set(sessions.map((s) => dayKey(s.created_at)));
+  let streak = 0;
+  const d = new Date();
+  if (!days.has(d.toISOString().slice(0, 10))) d.setDate(d.getDate() - 1);
+  while (days.has(d.toISOString().slice(0, 10))) { streak++; d.setDate(d.getDate() - 1); }
+
+  // Weakest dimensions averaged across recent sessions
+  const sums: Record<string, { total: number; n: number }> = {};
+  for (const s of recentN) {
+    for (const m of SCORE_META) {
+      const v = s.scores?.[m.key];
+      if (typeof v === "number") {
+        sums[m.key] = sums[m.key] || { total: 0, n: 0 };
+        sums[m.key].total += v; sums[m.key].n += 1;
+      }
+    }
+  }
+  const weakAreas = SCORE_META
+    .filter((m) => sums[m.key]?.n)
+    .map((m) => ({ key: m.key, label: m.label, avg: Math.round(sums[m.key].total / sums[m.key].n) }))
+    .sort((a, b) => a.avg - b.avg)
+    .slice(0, 3)
+    .map((w) => ({ ...w, tip: DIMENSION_FIX[w.key]?.tip ?? "Keep practicing this area.", challengeId: DIMENSION_FIX[w.key]?.challengeId }));
+
+  const recent = sessions.slice(0, 8).reverse().map((s) => ({ value: s.c2_readiness || 0, date: s.created_at }));
+
+  return { total: sessions.length, weekCount: week.length, latest: sessions[0]?.c2_readiness ?? 0, avgReadiness, trend, streak, weakAreas, recent };
 }
 
 function ScoreBar({ label, score, color }: { label: string; score: number; color: string }) {
@@ -255,9 +340,23 @@ export default function C2FluencyLabPage() {
   const promptShownAtRef = useRef<number>(0);
   const recordStartedAtRef = useRef<number>(0);
 
+  // Weekly fluency plan
+  const [planSessions, setPlanSessions] = useState<C2SessionRow[] | null>(null);
+
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  // Refresh saved sessions whenever we land back on the hub.
+  useEffect(() => {
+    if (flow !== "scenario") return;
+    let active = true;
+    fetch("/api/c2/sessions")
+      .then((r) => r.json())
+      .then((d) => { if (active) setPlanSessions(Array.isArray(d.sessions) ? d.sessions : []); })
+      .catch(() => { if (active) setPlanSessions([]); });
+    return () => { active = false; };
+  }, [flow]);
 
   function pickScenario(s: Scenario) {
     setScenario(s);
@@ -336,6 +435,19 @@ export default function C2FluencyLabPage() {
       if (!res.ok) throw new Error(data.error ?? "Analysis failed");
       setResult(data);
       setFlow("report");
+      // Persist for the weekly fluency plan (non-blocking)
+      fetch("/api/c2/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scenario: scenario?.label ?? "",
+          challenge: challenge?.label ?? "",
+          currentLevel: data.currentLevel ?? "",
+          c2Readiness: data.c2Readiness ?? 0,
+          scores: data.scores ?? {},
+          keepsBelowC2: data.keepsBelowC2 ?? [],
+        }),
+      }).catch(() => {});
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Analysis failed");
       setFlow("ready");
@@ -440,6 +552,7 @@ export default function C2FluencyLabPage() {
             { id: "scenarios", label: "Scenario Practice", icon: Target },
             { id: "challenges", label: "Challenge Modes", icon: Zap },
             { id: "think", label: "Think in English", icon: Sparkles },
+            { id: "plan", label: "My Plan", icon: ListChecks },
           ] as const).map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setTab(id)}
               className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full border transition-colors"
@@ -517,6 +630,118 @@ export default function C2FluencyLabPage() {
             </button>
           </Card>
         )}
+
+        {tab === "plan" && (() => {
+          if (planSessions === null) {
+            return (
+              <div className="flex flex-col items-center py-16" style={{ color: "var(--text-secondary)" }}>
+                <Loader2 size={28} className="animate-spin mb-2" style={{ color: "var(--accent)" }} />
+                <p className="text-sm">Loading your plan…</p>
+              </div>
+            );
+          }
+          if (planSessions.length === 0) {
+            return (
+              <Card className="text-center">
+                <ListChecks size={36} className="mx-auto mb-3" style={{ color: "var(--accent)", opacity: 0.5 }} />
+                <p className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>No data yet</p>
+                <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>Complete a few C2 sessions and your personalized weekly plan will appear here.</p>
+                <button onClick={() => setTab("scenarios")}
+                  className="text-white font-semibold px-5 py-2.5 rounded-lg" style={{ background: "var(--accent)" }}>
+                  Start a session
+                </button>
+              </Card>
+            );
+          }
+          const plan = computePlan(planSessions);
+          const maxBar = Math.max(100, ...plan.recent.map((r) => r.value));
+          return (
+            <div className="space-y-5">
+              {/* Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <Card className="text-center">
+                  <p className="text-2xl font-bold" style={{ color: readinessColor(plan.latest) }}>{plan.latest}</p>
+                  <p className="text-[10px]" style={{ color: "var(--text-secondary)" }}>Latest readiness</p>
+                </Card>
+                <Card className="text-center">
+                  <p className="text-2xl font-bold flex items-center justify-center gap-1" style={{ color: "var(--text-primary)" }}>
+                    {plan.avgReadiness}
+                    {plan.trend !== 0 && (
+                      <span className="text-xs font-bold" style={{ color: plan.trend > 0 ? "#00B37D" : "#E53935" }}>
+                        {plan.trend > 0 ? "▲" : "▼"}{Math.abs(plan.trend)}
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[10px]" style={{ color: "var(--text-secondary)" }}>Avg (recent)</p>
+                </Card>
+                <Card className="text-center">
+                  <p className="text-2xl font-bold flex items-center justify-center gap-1" style={{ color: "var(--text-primary)" }}>
+                    <Flame size={18} style={{ color: "#F5A623" }} /> {plan.streak}
+                  </p>
+                  <p className="text-[10px]" style={{ color: "var(--text-secondary)" }}>Day streak</p>
+                </Card>
+                <Card className="text-center">
+                  <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>{plan.weekCount}</p>
+                  <p className="text-[10px]" style={{ color: "var(--text-secondary)" }}>Sessions this week</p>
+                </Card>
+              </div>
+
+              {/* Trend */}
+              {plan.recent.length > 1 && (
+                <Card>
+                  <h2 className="font-bold mb-3 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+                    <TrendingUp size={16} style={{ color: "var(--accent)" }} /> C2 Readiness Trend
+                  </h2>
+                  <div className="flex items-end gap-2 h-28">
+                    {plan.recent.map((r, i) => (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                        <div className="w-full rounded-t" style={{ height: `${(r.value / maxBar) * 100}%`, background: readinessColor(r.value), minHeight: 4 }} title={`${r.value}`} />
+                        <span className="text-[9px]" style={{ color: "var(--text-secondary)" }}>{new Date(r.date).toLocaleDateString("en-US", { month: "numeric", day: "numeric" })}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              {/* This week's plan */}
+              <Card>
+                <h2 className="font-bold mb-1 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+                  <CalendarDays size={16} style={{ color: "var(--accent)" }} /> This Week's Plan
+                </h2>
+                <p className="text-xs mb-4" style={{ color: "var(--text-secondary)" }}>
+                  Personalized from your weakest areas. Aim for {Math.max(3, plan.weakAreas.length + 1)} sessions this week.
+                </p>
+                <div className="space-y-3">
+                  {plan.weakAreas.map((w, i) => {
+                    const ch = w.challengeId ? CHALLENGES.find((c) => c.id === w.challengeId) : null;
+                    return (
+                      <div key={w.key} className="flex items-start gap-3 rounded-lg p-3" style={{ background: "var(--bg-secondary)" }}>
+                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: "var(--accent)" }}>{i + 1}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>{w.label}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: `${readinessColor(w.avg)}20`, color: readinessColor(w.avg) }}>avg {w.avg}</span>
+                          </div>
+                          <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>{w.tip}</p>
+                        </div>
+                        {ch && (
+                          <button onClick={() => pickChallenge(ch)}
+                            className="text-xs font-semibold px-3 py-1.5 rounded-full shrink-0 transition-colors"
+                            style={{ background: "var(--accent)", color: "#fff" }}>
+                            Start
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {plan.weakAreas.length === 0 && (
+                    <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Strong across the board — keep practicing scenarios to stay sharp.</p>
+                  )}
+                </div>
+              </Card>
+            </div>
+          );
+        })()}
       </div>
     );
   }
