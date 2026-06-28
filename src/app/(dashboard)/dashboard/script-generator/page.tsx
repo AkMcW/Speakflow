@@ -3,7 +3,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { SCRIPT_MENU_OPTIONS, ScriptMenuOption } from "@/data/scriptMenuOptions";
 import {
-  Search, Star, Loader2, Copy, Mic, Download,
+  Search, Star, Loader2, Copy, Mic, Download, Save,
   Link, FileText, AlertCircle, CheckCircle, Lightbulb,
   MessageSquare, Sparkles, ArrowLeft, ChevronDown,
 } from "lucide-react";
@@ -69,6 +69,7 @@ export default function ScriptGeneratorPage() {
   const [script, setScript] = useState("");
   const [genError, setGenError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const filtered = useMemo(() => {
     let list = SCRIPT_MENU_OPTIONS;
@@ -163,6 +164,7 @@ export default function ScriptGeneratorPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Generation failed");
       setScript(data.script || "");
+      setSaveState("idle");
       setStage("result");
     } catch (err: unknown) {
       setGenError(err instanceof Error ? err.message : "Generation failed");
@@ -175,6 +177,28 @@ export default function ScriptGeneratorPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
+  }
+
+  async function saveScript() {
+    if (!script || saveState === "saving" || saveState === "saved") return;
+    setSaveState("saving");
+    try {
+      const res = await fetch("/api/scripts/saved", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: selected?.title || "Generated Script",
+          scenario: selected?.title || "Script Generator",
+          content: script,
+          wordCount: script.trim().split(/\s+/).length,
+          duration,
+        }),
+      });
+      if (!res.ok) throw new Error("save failed");
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
   }
 
   function practiceScript() {
@@ -440,6 +464,17 @@ export default function ScriptGeneratorPage() {
             <button onClick={copyScript} style={{ display: "flex", alignItems: "center", gap: 6, padding: "0.6rem 0.9rem", borderRadius: 8, background: "var(--card-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", cursor: "pointer", fontSize: "0.85rem" }}>
               {copied ? <CheckCircle size={14} style={{ color: "#10b981" }} /> : <Copy size={14} />}
               {copied ? "Copied!" : "Copy"}
+            </button>
+            <button onClick={saveScript} disabled={saveState === "saving" || saveState === "saved"}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "0.6rem 0.9rem", borderRadius: 8,
+                background: saveState === "saved" ? "#10b98115" : "var(--card-bg)",
+                border: `1px solid ${saveState === "saved" ? "#10b981" : "var(--border)"}`,
+                color: saveState === "saved" ? "#10b981" : "var(--text-primary)",
+                cursor: saveState === "saving" || saveState === "saved" ? "default" : "pointer", fontSize: "0.85rem" }}>
+              {saveState === "saving" ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
+                : saveState === "saved" ? <CheckCircle size={14} style={{ color: "#10b981" }} />
+                : <Save size={14} />}
+              {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : saveState === "error" ? "Retry Save" : "Save"}
             </button>
             <button onClick={downloadScript} style={{ display: "flex", alignItems: "center", gap: 6, padding: "0.6rem 0.9rem", borderRadius: 8, background: "var(--card-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", cursor: "pointer", fontSize: "0.85rem" }}>
               <Download size={14} /> Download

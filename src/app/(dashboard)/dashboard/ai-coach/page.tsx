@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Mic, Square, Volume2, VolumeX, Bot, User, Loader2 } from "lucide-react";
+import { Mic, Square, Volume2, VolumeX, Bot, User, Loader2, Radio } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -28,12 +28,22 @@ export default function AICoachPage() {
   const [topic, setTopic] = useState(TOPICS[0]);
   const [started, setStarted] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [handsFree, setHandsFree] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  // Hands-free / voice-activity detection
+  const handsFreeRef = useRef(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const vadRafRef = useRef<number | null>(null);
+  const silenceStartRef = useRef<number | null>(null);
+  const speechDetectedRef = useRef(false);
+
+  useEffect(() => { handsFreeRef.current = handsFree; }, [handsFree]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,6 +52,8 @@ export default function AICoachPage() {
   useEffect(() => () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (audioRef.current) audioRef.current.pause();
+    teardownVAD();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function startSession() {
@@ -74,21 +86,112 @@ export default function AICoachPage() {
       if (data.audio && !muted) {
         await playAudio(data.audio);
       }
+      setThinking(false);
+      // In hands-free mode, start listening again as soon as the coach finishes
+      if (handsFreeRef.current) startListening();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to get response");
-    } finally {
       setThinking(false);
     }
   }
 
-  async function playAudio(base64: string) {
-    if (audioRef.current) { audioRef.current.pause(); }
-    const audio = new Audio(`data:audio/mpeg;base64,${base64}`);
-    audioRef.current = audio;
-    setSpeaking(true);
-    audio.onended = () => setSpeaking(false);
-    audio.onerror = () => setSpeaking(false);
-    await audio.play().catch(() => setSpeaking(false));
+  // Resolves when playback finishes so hands-free can resume listening after.
+  function playAudio(base64: string) {
+    return new Promise<void>((resolve) => {
+      if (audioRef.current) { audioRef.current.pause(); }
+      const audio = new Audio(`data:audio/mpeg;base64,${base64}`);
+      audioRef.current = audio;
+      setSpeaking(true);
+      audio.onended = () => { setSpeaking(false); resolve(); };
+      audio.onerror = () => { setSpeaking(false); resolve(); };
+      audio.play().catch(() => { setSpeaking(false); resolve(); });
+    });
+  }
+
+  function teardownVAD() {
+    if (vadRafRef.current) { cancelAnimationFrame(vadRafRef.current); vadRafRef.current = null; }
+    if (audioContextRef.current) { audioContextRef.current.close().catch(() => {}); audioContextRef.current = null; }
+    silenceStartRef.current = null;
+    speechDetectedRef.current = false;
+  }
+
+  // Monitor mic volume; auto-stop & send when the user goes quiet after speaking.
+  function setupVAD(stream: MediaStream) {
+    try {
+      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new Ctx();
+      audioContextRef.current = ctx;
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+      const buf = new Uint8Array(analyser.frequencyBinCount);
+      speechDetectedRef.current = false;
+      silenceStartRef.current = null;
+      const startedAt = Date.now();
+
+      const SPEAK_THRESHOLD = 0.025; // RMS above this counts as speech
+      const SILENCE_MS = 1500;       // quiet this long after speech → send
+      const NO_SPEECH_TIMEOUT = 9000; // never spoke → cancel and wait
+
+      const tick = () => {
+        analyser.getByteTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v; }
+        const rms = Math.sqrt(sum / buf.length);
+        const now = Date.now();
+
+        if (rms > SPEAK_THRESHOLD) {
+          speechDetectedRef.current = true;
+          silenceStartRef.current = null;
+        } else if (speechDetectedRef.current) {
+          if (silenceStartRef.current == null) silenceStartRef.current = now;
+          else if (now - silenceStartRef.current > SILENCE_MS) { stopRecording(); return; }
+        } else if (now - startedAt > NO_SPEECH_TIMEOUT) {
+          cancelListening();
+          return;
+        }
+        vadRafRef.current = requestAnimationFrame(tick);
+      };
+      vadRafRef.current = requestAnimationFrame(tick);
+    } catch {
+      /* VAD unavailable — user can still tap to stop */
+    }
+  }
+
+  // Hands-free listen: same as startRecording but with silence detection.
+  async function startListening() {
+    if (recording || thinking) return;
+    setError("");
+    if (audioRef.current) { audioRef.current.pause(); setSpeaking(false); }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = ["audio/webm", "audio/mp4", "audio/ogg"].find((m) => MediaRecorder.isTypeSupported(m)) ?? "";
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.start(100);
+      setRecording(true);
+      setSeconds(0);
+      intervalRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
+      setupVAD(stream);
+    } catch {
+      setError("Microphone access denied.");
+    }
+  }
+
+  // Stop listening WITHOUT sending (e.g. user never spoke in hands-free mode).
+  function cancelListening() {
+    teardownVAD();
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.onstop = null;
+      recorder.stop();
+      recorder.stream.getTracks().forEach((t) => t.stop());
+    }
+    setRecording(false);
   }
 
   async function startRecording() {
@@ -111,9 +214,10 @@ export default function AICoachPage() {
   }
 
   async function stopRecording() {
+    teardownVAD();
     if (intervalRef.current) clearInterval(intervalRef.current);
     const recorder = mediaRecorderRef.current;
-    if (!recorder) return;
+    if (!recorder || recorder.state === "inactive") return;
     recorder.stop();
     recorder.stream.getTracks().forEach((t) => t.stop());
     setRecording(false);
@@ -131,7 +235,12 @@ export default function AICoachPage() {
         const data = await res.json();
         if (!res.ok || data.error) throw new Error(data.error);
         const userText = data.transcript?.trim();
-        if (!userText) throw new Error("No speech detected — please try again");
+        if (!userText) {
+          // In hands-free mode, silently resume listening instead of erroring out
+          setThinking(false);
+          if (handsFreeRef.current) { startListening(); return; }
+          throw new Error("No speech detected — please try again");
+        }
 
         const userMsg: Message = { role: "user", content: userText };
         const updatedMessages = [...messages, userMsg];
@@ -225,6 +334,28 @@ export default function AICoachPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => {
+              setHandsFree((on) => {
+                const next = !on;
+                handsFreeRef.current = next;
+                if (next) {
+                  // turn on → start listening if idle
+                  if (!recording && !thinking && !speaking) startListening();
+                } else {
+                  // turn off → stop any auto-listening
+                  if (recording) cancelListening();
+                }
+                return next;
+              });
+            }}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded border transition-colors ${
+              handsFree ? "border-[#0056D2] bg-[#E8F1FF] text-[#0056D2]" : "border-[#E0E0E0] text-[#636363] hover:bg-[#F5F5F5]"
+            }`}
+            title="Hands-free conversation — auto-listen and auto-send"
+          >
+            <Radio size={14} /> Hands-free
+          </button>
+          <button
             onClick={() => { setMuted((m) => !m); if (audioRef.current) { audioRef.current.pause(); setSpeaking(false); } }}
             className="p-2 rounded border border-[#E0E0E0] text-[#636363] hover:bg-[#F5F5F5] transition-colors"
             title={muted ? "Unmute" : "Mute"}
@@ -232,7 +363,7 @@ export default function AICoachPage() {
             {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
           </button>
           <button
-            onClick={() => { setStarted(false); setMessages([]); setError(""); }}
+            onClick={() => { cancelListening(); teardownVAD(); if (audioRef.current) audioRef.current.pause(); setSpeaking(false); setHandsFree(false); setStarted(false); setMessages([]); setError(""); }}
             className="text-xs border border-[#E0E0E0] text-[#636363] hover:bg-[#F5F5F5] px-3 py-1.5 rounded transition-colors font-medium"
           >
             End session
@@ -284,31 +415,36 @@ export default function AICoachPage() {
           <>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-              <span className="text-xs font-bold text-red-500 uppercase tracking-wider">Recording — {fmtTime(seconds)}</span>
+              <span className="text-xs font-bold text-red-500 uppercase tracking-wider">
+                {handsFree ? "Listening" : "Recording"} — {fmtTime(seconds)}
+              </span>
             </div>
             <div className="flex items-end gap-0.5 h-8">
               {Array.from({ length: 16 }).map((_, i) => (
                 <div key={i} className="wave-bar w-1 bg-[#0056D2] rounded-full" style={{ height: "20px" }} />
               ))}
             </div>
+            {handsFree && (
+              <p className="text-xs text-[#9E9E9E]">Speak naturally — I&apos;ll send automatically when you pause.</p>
+            )}
             <button
               onClick={stopRecording}
               className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2.5 rounded-full transition-colors text-sm"
             >
-              <Square size={14} /> Stop & Send
+              <Square size={14} /> {handsFree ? "Send now" : "Stop & Send"}
             </button>
           </>
         ) : (
           <div className="flex flex-col items-center gap-2">
             <button
               disabled={thinking || speaking}
-              onClick={startRecording}
+              onClick={handsFree ? startListening : startRecording}
               className="w-16 h-16 rounded-full bg-[#0056D2] hover:bg-[#003B8E] disabled:bg-[#E0E0E0] disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors pulse-ring"
             >
               <Mic size={26} />
             </button>
             <p className="text-xs text-[#9E9E9E]">
-              {thinking ? "Wait for Coach Alex to finish…" : speaking ? "Coach Alex is speaking…" : "Press to speak"}
+              {thinking ? "Wait for Coach Alex to finish…" : speaking ? "Coach Alex is speaking…" : handsFree ? "Hands-free on — tap to start, then just talk" : "Press to speak"}
             </p>
           </div>
         )}
