@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   try {
-    const { transcript, scenario, prompt } = await req.json();
+    const { transcript, scenario, prompt, challenge } = await req.json();
     if (!transcript?.trim()) {
       return NextResponse.json({ error: "No speech detected. Please record again and speak clearly." }, { status: 400 });
     }
@@ -19,6 +19,7 @@ Be honest and demanding but constructive. C2 is rare: reserve 90+ for genuinely 
 
 Speaking scenario: ${scenario || "general advanced speaking"}.
 ${prompt ? `The speaker was responding to: "${prompt}".` : ""}
+${challenge ? `This was a focused CHALLENGE drill: ${challenge}. Weight your scoring and feedback heavily toward how well the speaker met this specific challenge, and reference it explicitly in "keepsBelowC2" and "didWell".` : ""}
 
 Return ONLY valid JSON with this exact structure:
 {

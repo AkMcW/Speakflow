@@ -40,6 +40,68 @@ const SCENARIOS: Scenario[] = [
     prompts: ["Speak for 2 minutes on: does technology bring people together or push them apart?", "Discuss the advantages and disadvantages of globalization.", "To what extent should governments fund the arts?"] },
 ];
 
+// ─── Challenge modes ──────────────────────────────────────────────────────────
+interface Challenge {
+  id: string;
+  label: string;
+  emoji: string;
+  desc: string;
+  task: string;         // what the user sees / speaks to
+  instruction: string;  // sent to the analyzer to weight scoring
+}
+
+const CHALLENGES: Challenge[] = [
+  { id: "abstract", label: "Abstract Topic", emoji: "🧠", desc: "Speak about complex ideas",
+    task: "Speak for 90 seconds: “What does it really mean to live a good life?”",
+    instruction: "Evaluate how well the speaker handles an abstract, intellectual topic with depth, nuance, and clear structure." },
+  { id: "nuance", label: "Nuance Challenge", emoji: "⚖️", desc: "Explain both sides fairly",
+    task: "Pick a debated topic and explain BOTH sides fairly before giving your view.",
+    instruction: "Evaluate balance, fairness, and the ability to express nuance and concession ('admittedly', 'that said', 'on the other hand')." },
+  { id: "precision", label: "Precision Challenge", emoji: "🎯", desc: "No vague words allowed",
+    task: "Explain your work WITHOUT using vague words like 'thing', 'stuff', 'good', 'important', 'very', 'a lot'.",
+    instruction: "Penalize any vague or filler vocabulary heavily. Reward precise, specific word choice." },
+  { id: "debate", label: "Debate Under Pressure", emoji: "🔥", desc: "Defend an argument",
+    task: "Defend this: “Remote work harms long-term innovation.” Make your strongest case.",
+    instruction: "Evaluate persuasiveness, rebuttal strength, confidence, and rhetorical control under pressure." },
+  { id: "executive", label: "Executive Summary", emoji: "⏱️", desc: "Complex idea in 60s",
+    task: "Explain a complex topic you know well in 60 seconds, as if to a busy executive.",
+    instruction: "Evaluate concision, prioritization, and clarity. Reward leading with the key point and cutting filler." },
+  { id: "idiom", label: "Idiom Challenge", emoji: "💬", desc: "Use natural expressions",
+    task: "Tell a short story and naturally use at least 3 idioms or phrasal verbs.",
+    instruction: "Evaluate idiomatic control — natural, correct use of idioms, collocations, and phrasal verbs. Flag any forced or misused expressions." },
+  { id: "story", label: "Storytelling", emoji: "📖", desc: "Tell a compelling story",
+    task: "Tell a 2-minute story about a turning point in your life, with emotion and a clear arc.",
+    instruction: "Evaluate narrative structure, emotional engagement, pacing, and vivid, natural language." },
+  { id: "formal-natural", label: "Formal → Natural", emoji: "🔁", desc: "Sound spoken, not written",
+    task: "Explain a formal/technical topic in natural, spoken English — like talking to a friend.",
+    instruction: "Evaluate how spoken and natural the delivery is vs. textbook/written style. Reward contractions, rhythm, and conversational flow." },
+  { id: "hostile-qa", label: "Hostile Q&A", emoji: "🛡️", desc: "Stay calm under fire",
+    task: "Answer calmly: “Honestly, why should anyone trust your judgment on this?”",
+    instruction: "Evaluate composure, diplomacy, confidence, and the ability to reframe a hostile question gracefully." },
+  { id: "spontaneous", label: "Spontaneous Speaking", emoji: "⚡", desc: "No preparation",
+    task: "Speak for 60 seconds on a random topic: “Should cities ban cars from their centers?”",
+    instruction: "Evaluate fluency and coherence with no preparation — flag hesitation, restarts, and loss of structure." },
+];
+
+// ─── Think in English prompts ─────────────────────────────────────────────────
+const THINK_PROMPTS: string[] = [
+  "Explain your opinion on remote work in 30 seconds.",
+  "Give three reasons people procrastinate.",
+  "Respond politely to someone who disagrees with you.",
+  "Summarize what you did last weekend in one sentence.",
+  "Describe your city without using the words 'nice', 'good', or 'big'.",
+  "Argue why reading is better than watching videos.",
+  "Explain how to make your favorite meal.",
+  "What's the most important skill for the next 10 years? Why?",
+  "Persuade me to visit your country.",
+  "Describe your job to a 10-year-old.",
+  "What would you change about your morning routine?",
+  "Give your honest opinion on social media in 20 seconds.",
+  "Explain a difficult concept from your field simply.",
+  "React to this: 'Money can't buy happiness.'",
+  "Tell me about a goal you have and your first step toward it.",
+];
+
 // ─── Score config ─────────────────────────────────────────────────────────────
 const SCORE_META: { key: string; label: string; color: string }[] = [
   { key: "fluency", label: "Fluency", color: "#0056D2" },
@@ -76,7 +138,21 @@ interface C2Result {
   shadowingSentence: string;
 }
 
-type Flow = "scenario" | "ready" | "recording" | "transcribing" | "analyzing" | "report";
+type Flow =
+  | "scenario" | "ready" | "recording" | "transcribing" | "analyzing" | "report"
+  | "think-intro" | "think-prompt" | "think-recording" | "think-transcribing" | "think-feedback";
+
+type LandingTab = "scenarios" | "challenges" | "think";
+
+interface ThinkFeedback {
+  naturalness: number;
+  speed: number;
+  hesitation: number;
+  verdict: string;
+  betterAnswer: string;
+  oneFix: string;
+  responseDelaySec: number | null;
+}
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
@@ -163,12 +239,21 @@ function ListenButton({ text, label = "Listen", filled = false }: { text: string
 
 export default function C2FluencyLabPage() {
   const [flow, setFlow] = useState<Flow>("scenario");
+  const [tab, setTab] = useState<LandingTab>("scenarios");
   const [scenario, setScenario] = useState<Scenario | null>(null);
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [prompt, setPrompt] = useState("");
   const [seconds, setSeconds] = useState(0);
   const [transcript, setTranscript] = useState("");
   const [result, setResult] = useState<C2Result | null>(null);
   const [error, setError] = useState("");
+
+  // Think in English
+  const [thinkPrompt, setThinkPrompt] = useState("");
+  const [thinkRound, setThinkRound] = useState(0);
+  const [thinkFeedback, setThinkFeedback] = useState<ThinkFeedback | null>(null);
+  const promptShownAtRef = useRef<number>(0);
+  const recordStartedAtRef = useRef<number>(0);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -176,7 +261,19 @@ export default function C2FluencyLabPage() {
 
   function pickScenario(s: Scenario) {
     setScenario(s);
+    setChallenge(null);
     setPrompt(s.prompts[0]);
+    setError("");
+    setResult(null);
+    setTranscript("");
+    setFlow("ready");
+  }
+
+  function pickChallenge(c: Challenge) {
+    // Reuse the record→analyze flow; render the challenge as a pseudo-scenario.
+    setScenario({ id: c.id, label: c.label, emoji: c.emoji, desc: c.desc, prompts: [c.task] });
+    setChallenge(c);
+    setPrompt(c.task);
     setError("");
     setResult(null);
     setTranscript("");
@@ -233,7 +330,7 @@ export default function C2FluencyLabPage() {
       const res = await fetch("/api/c2/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcript: tx, scenario: scenario?.label, prompt }),
+        body: JSON.stringify({ transcript: tx, scenario: scenario?.label, prompt, challenge: challenge?.instruction }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Analysis failed");
@@ -253,6 +350,77 @@ export default function C2FluencyLabPage() {
     setError("");
   }
 
+  // ── Think in English ──
+  function nextThinkPrompt() {
+    const i = Math.floor((thinkRound + Date.now()) % THINK_PROMPTS.length);
+    setThinkPrompt(THINK_PROMPTS[i]);
+    setThinkFeedback(null);
+    setTranscript("");
+    setError("");
+    promptShownAtRef.current = Date.now();
+    setFlow("think-prompt");
+  }
+
+  function startThinkDrill() {
+    setThinkRound(0);
+    nextThinkPrompt();
+  }
+
+  async function startThinkRecording() {
+    setError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = ["audio/webm", "audio/mp4", "audio/ogg"].find((m) => MediaRecorder.isTypeSupported(m)) ?? "";
+      const mr = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      chunksRef.current = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.start(250);
+      mediaRecorderRef.current = mr;
+      recordStartedAtRef.current = Date.now();
+      setSeconds(0);
+      intervalRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
+      setFlow("think-recording");
+    } catch {
+      setError("Microphone access denied. Please allow microphone access and try again.");
+    }
+  }
+
+  async function stopThinkRecording() {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    const mr = mediaRecorderRef.current;
+    if (!mr) return;
+    const delayMs = recordStartedAtRef.current - promptShownAtRef.current;
+    mr.stop();
+    mr.stream.getTracks().forEach((t) => t.stop());
+    setFlow("think-transcribing");
+
+    await new Promise<void>((res) => { mr.onstop = () => res(); });
+    const mimeType = mr.mimeType || "audio/webm";
+    const blob = new Blob(chunksRef.current, { type: mimeType });
+    const fd = new FormData();
+    fd.append("audio", blob, "think.webm");
+
+    try {
+      const txRes = await fetch("/api/practice/transcribe", { method: "POST", body: fd });
+      const txData = await txRes.json();
+      if (!txRes.ok || !txData.transcript?.trim()) throw new Error(txData.error ?? "No speech detected — answer right away next time.");
+      setTranscript(txData.transcript);
+      const res = await fetch("/api/c2/think", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript: txData.transcript, prompt: thinkPrompt, responseDelayMs: delayMs }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Feedback failed");
+      setThinkFeedback(data);
+      setThinkRound((n) => n + 1);
+      setFlow("think-feedback");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+      setFlow("think-prompt");
+    }
+  }
+
   // ── Scenario selection ──
   if (flow === "scenario") {
     return (
@@ -266,24 +434,205 @@ export default function C2FluencyLabPage() {
           </p>
         </div>
 
-        <div>
-          <p className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Choose a speaking scenario</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {SCENARIOS.map((s) => (
-              <button key={s.id} onClick={() => pickScenario(s)}
-                className="text-left rounded-xl p-4 transition-all hover:shadow-md"
-                style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xl">{s.emoji}</span>
-                  <span className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>{s.label}</span>
-                </div>
-                <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{s.desc}</p>
-              </button>
-            ))}
-          </div>
+        {/* Mode tabs */}
+        <div className="flex gap-2 flex-wrap">
+          {([
+            { id: "scenarios", label: "Scenario Practice", icon: Target },
+            { id: "challenges", label: "Challenge Modes", icon: Zap },
+            { id: "think", label: "Think in English", icon: Sparkles },
+          ] as const).map(({ id, label, icon: Icon }) => (
+            <button key={id} onClick={() => setTab(id)}
+              className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-full border transition-colors"
+              style={tab === id
+                ? { background: "var(--accent)", color: "#fff", borderColor: "var(--accent)" }
+                : { background: "var(--bg-card)", color: "var(--text-secondary)", borderColor: "var(--border)" }}>
+              <Icon size={14} /> {label}
+            </button>
+          ))}
         </div>
+
+        {tab === "scenarios" && (
+          <div>
+            <p className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Choose a speaking scenario</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {SCENARIOS.map((s) => (
+                <button key={s.id} onClick={() => pickScenario(s)}
+                  className="text-left rounded-xl p-4 transition-all hover:shadow-md"
+                  style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xl">{s.emoji}</span>
+                    <span className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>{s.label}</span>
+                  </div>
+                  <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{s.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab === "challenges" && (
+          <div>
+            <p className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>Advanced speaking challenges</p>
+            <p className="text-xs mb-3" style={{ color: "var(--text-secondary)" }}>Focused drills that push one specific C2 skill. Scoring weighs heavily toward the challenge goal.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {CHALLENGES.map((c) => (
+                <button key={c.id} onClick={() => pickChallenge(c)}
+                  className="text-left rounded-xl p-4 transition-all hover:shadow-md"
+                  style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xl">{c.emoji}</span>
+                    <span className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>{c.label}</span>
+                  </div>
+                  <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{c.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab === "think" && (
+          <Card>
+            <div className="flex items-start gap-3 mb-4">
+              <span className="text-3xl">⚡</span>
+              <div>
+                <h2 className="font-bold" style={{ color: "var(--text-primary)" }}>Think in English Mode</h2>
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                  Stop translating. See a prompt, then answer immediately. We measure your response speed, hesitation, and how natural you sound — then give a crisp upgrade.
+                </p>
+              </div>
+            </div>
+            <ul className="text-xs space-y-1.5 mb-4" style={{ color: "var(--text-secondary)" }}>
+              <li className="flex items-center gap-2"><CheckCircle size={13} style={{ color: "#00B37D" }} /> Rapid prompts, one at a time</li>
+              <li className="flex items-center gap-2"><CheckCircle size={13} style={{ color: "#00B37D" }} /> Answer the moment you're ready — your delay is timed</li>
+              <li className="flex items-center gap-2"><CheckCircle size={13} style={{ color: "#00B37D" }} /> Instant model answer and one fix per round</li>
+            </ul>
+            <button onClick={startThinkDrill}
+              className="flex items-center gap-2 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors"
+              style={{ background: "var(--accent)" }}>
+              <Sparkles size={16} /> Start Drill
+            </button>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
+  // ── Think in English flow ──
+  if (flow === "think-prompt" || flow === "think-recording" || flow === "think-transcribing" || flow === "think-feedback") {
+    return (
+      <div className="max-w-2xl mx-auto space-y-5">
+        <div className="flex items-center justify-between">
+          <button onClick={() => setFlow("scenario")} className="flex items-center gap-1.5 text-sm" style={{ color: "var(--text-secondary)" }}>
+            <ArrowLeft size={15} /> Exit drill
+          </button>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "var(--accent-bg)", color: "var(--accent)" }}>
+            Round {thinkRound + (flow === "think-feedback" ? 0 : 1)}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">⚡</span>
+          <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Think in English</h1>
+        </div>
+
+        {/* Prompt */}
+        <Card className="text-center !py-7">
+          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-secondary)" }}>Answer immediately</p>
+          <p className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>{thinkPrompt}</p>
+        </Card>
+
+        {error && (
+          <div className="flex items-center gap-2 p-3 rounded-lg text-sm" style={{ background: "#FFF0F0", border: "1px solid #FFCDD2", color: "#E53935" }}>
+            <AlertCircle size={15} className="shrink-0" /> {error}
+          </div>
+        )}
+
+        {flow === "think-prompt" && (
+          <Card className="flex flex-col items-center gap-3 text-center">
+            <button onClick={startThinkRecording}
+              className="w-16 h-16 rounded-full text-white flex items-center justify-center shadow-lg pulse-ring transition-colors"
+              style={{ background: "var(--accent)" }}>
+              <Mic size={28} />
+            </button>
+            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Tap and start talking right away</p>
+          </Card>
+        )}
+
+        {flow === "think-recording" && (
+          <Card className="flex flex-col items-center gap-3 text-center">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-xs font-bold text-red-500 uppercase tracking-wider">Recording — {fmt(seconds)}</span>
+            </div>
+            <button onClick={stopThinkRecording}
+              className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2.5 rounded-full transition-colors">
+              <Square size={16} /> Done
+            </button>
+          </Card>
+        )}
+
+        {flow === "think-transcribing" && (
+          <Card className="flex flex-col items-center gap-3 py-6">
+            <Loader2 size={32} className="animate-spin" style={{ color: "var(--accent)" }} />
+            <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Scoring your answer…</p>
+          </Card>
+        )}
+
+        {flow === "think-feedback" && thinkFeedback && (
+          <>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Naturalness", v: thinkFeedback.naturalness },
+                { label: "Speed", v: thinkFeedback.speed },
+                { label: "No Hesitation", v: thinkFeedback.hesitation },
+              ].map((m) => (
+                <Card key={m.label} className="text-center">
+                  <p className="text-2xl font-bold" style={{ color: readinessColor(m.v) }}>{m.v}</p>
+                  <p className="text-[10px]" style={{ color: "var(--text-secondary)" }}>{m.label}</p>
+                </Card>
+              ))}
+            </div>
+
+            {thinkFeedback.responseDelaySec != null && (
+              <p className="text-xs text-center" style={{ color: "var(--text-secondary)" }}>
+                You started speaking after <strong style={{ color: "var(--text-primary)" }}>{thinkFeedback.responseDelaySec}s</strong>
+                {thinkFeedback.responseDelaySec <= 2 ? " — excellent, that's native-like speed." : thinkFeedback.responseDelaySec <= 4 ? " — good, aim for under 2s." : " — try to start faster; don't translate first."}
+              </p>
+            )}
+
+            <Card>
+              <p className="text-sm" style={{ color: "var(--text-primary)" }}>{thinkFeedback.verdict}</p>
+            </Card>
+
+            <Card>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "#00875A" }}>C2 model answer</p>
+                <ListenButton text={thinkFeedback.betterAnswer} label="Listen" />
+              </div>
+              <p className="text-sm font-medium mb-3" style={{ color: "var(--text-primary)" }}>“{thinkFeedback.betterAnswer}”</p>
+              <p className="text-xs flex items-start gap-1.5" style={{ color: "var(--text-secondary)" }}>
+                <Lightbulb size={13} className="mt-0.5 shrink-0" style={{ color: "#F5A623" }} /> {thinkFeedback.oneFix}
+              </p>
+            </Card>
+
+            <div className="flex gap-3 justify-center pb-4">
+              <button onClick={() => setFlow("scenario")}
+                className="text-sm font-semibold px-5 py-2.5 rounded-lg border transition-colors"
+                style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}>
+                Finish
+              </button>
+              <button onClick={nextThinkPrompt}
+                className="flex items-center gap-2 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors"
+                style={{ background: "var(--accent)" }}>
+                Next Prompt <ArrowLeft size={15} className="rotate-180" />
+              </button>
+            </div>
+          </>
+        )}
       </div>
     );
   }
