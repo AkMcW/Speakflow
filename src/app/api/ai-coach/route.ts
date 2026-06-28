@@ -33,33 +33,50 @@ Be encouraging, warm, and professional.`,
 
     const replyText = completion.choices[0]?.message?.content ?? "I didn't catch that. Could you try again?";
 
-    // Convert to speech with ElevenLabs (optional — skip if no API key or voiceId is null)
-    if (!voiceId || !process.env.ELEVENLABS_API_KEY) {
-      return NextResponse.json({ text: replyText, audio: null });
-    }
-    const voice = voiceId || "21m00Tcm4TlvDq8ikWAM"; // Rachel — warm, professional
-    const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
-      method: "POST",
-      headers: {
-        "xi-api-key": process.env.ELEVENLABS_API_KEY!,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        text: replyText,
-        model_id: "eleven_turbo_v2_5",
-        voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-      }),
-    });
+    // ── Text-to-speech so the coach can actually talk back ──
+    // Prefer ElevenLabs when configured; otherwise fall back to OpenAI TTS
+    // (always available since OPENAI_API_KEY is required). Either way the
+    // coach speaks — we only return audio: null if both engines fail.
+    let base64: string | null = null;
 
-    if (!ttsRes.ok) {
-      const errText = await ttsRes.text();
-      console.error("ElevenLabs error:", errText);
-      // Return text only if TTS fails
-      return NextResponse.json({ text: replyText, audio: null });
+    if (process.env.ELEVENLABS_API_KEY) {
+      try {
+        const voice = voiceId || "21m00Tcm4TlvDq8ikWAM"; // Rachel — warm, professional
+        const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
+          method: "POST",
+          headers: {
+            "xi-api-key": process.env.ELEVENLABS_API_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text: replyText,
+            model_id: "eleven_turbo_v2_5",
+            voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+          }),
+        });
+        if (ttsRes.ok) {
+          base64 = Buffer.from(await ttsRes.arrayBuffer()).toString("base64");
+        } else {
+          console.error("ElevenLabs error:", await ttsRes.text());
+        }
+      } catch (e) {
+        console.error("ElevenLabs request failed:", e);
+      }
     }
 
-    const audioBuffer = await ttsRes.arrayBuffer();
-    const base64 = Buffer.from(audioBuffer).toString("base64");
+    // Fallback to OpenAI TTS if ElevenLabs is absent or failed
+    if (!base64) {
+      try {
+        const speech = await openai.audio.speech.create({
+          model: "tts-1",
+          voice: "nova", // warm, friendly female voice
+          input: replyText,
+        });
+        base64 = Buffer.from(await speech.arrayBuffer()).toString("base64");
+      } catch (e) {
+        console.error("OpenAI TTS failed:", e);
+      }
+    }
 
     return NextResponse.json({ text: replyText, audio: base64 });
   } catch (err) {

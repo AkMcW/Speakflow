@@ -452,9 +452,8 @@ export default function PracticePage() {
           </button>
         </div>
 
-        {/* Script body — resizable (drag bottom-right corner to adjust height) */}
-        <div className={`bg-[#F9FAFB] border border-[#E0E0E0] rounded-lg p-5 leading-relaxed overflow-y-auto resize-y ${fontSizeClass[fontSize]}`}
-          style={{ height: "420px", minHeight: "180px" }}>
+        {/* Script body — fits to content length */}
+        <div className={`bg-[#F9FAFB] border border-[#E0E0E0] rounded-lg p-5 leading-relaxed ${fontSizeClass[fontSize]}`}>
           {notationOn
             ? phoneticOn
               ? <div className="whitespace-pre-wrap leading-relaxed">{addPhonetics(stripNotation(scriptContent).replace(/\n/g, "\n"))}</div>

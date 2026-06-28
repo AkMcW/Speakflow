@@ -64,12 +64,18 @@ async function extractYouTube(url: string): Promise<{ title: string; author: str
     }
   } catch { /* ignore */ }
 
-  // Try to get description and auto-captions from the YouTube page
+  // Try to get description and auto-captions from the YouTube page.
+  // The CONSENT cookie + browser-like headers bypass YouTube's EU consent
+  // interstitial, which otherwise returns a page with no player data.
   let description = "";
-  let transcript = null;
+  let transcript: string | null = null;
   try {
-    const pageRes = await fetch(`https://www.youtube.com/watch?v=${id}`, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; SpeakFlowBot/1.0)" },
+    const pageRes = await fetch(`https://www.youtube.com/watch?v=${id}&hl=en`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cookie": "CONSENT=YES+1",
+      },
     });
     if (pageRes.ok) {
       const html = await pageRes.text();
@@ -81,32 +87,54 @@ async function extractYouTube(url: string): Promise<{ title: string; author: str
         description = descMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"').slice(0, 1500);
       }
 
-      // Try to find caption track URL
-      const captionMatch = html.match(/"captionTracks":\[(.*?)\]/);
+      // Try to find caption track URLs (prefer an English track if present)
+      const captionMatch = html.match(/"captionTracks":(\[.*?\])/);
       if (captionMatch) {
-        const trackMatch = captionMatch[1].match(/"baseUrl":"(.*?)"/);
-        if (trackMatch) {
-          const captionUrl = trackMatch[1].replace(/\\u0026/g, "&").replace(/\\\//g, "/");
-          try {
-            const captionRes = await fetch(captionUrl);
-            if (captionRes.ok) {
-              const xml = await captionRes.text();
-              transcript = xml
-                .replace(/<[^>]+>/g, " ")
-                .replace(/&amp;/g, "&")
-                .replace(/&lt;/g, "<")
-                .replace(/&gt;/g, ">")
-                .replace(/&#39;/g, "'")
-                .replace(/\s+/g, " ")
-                .trim();
-            }
-          } catch { /* ignore */ }
+        const urls = [...captionMatch[1].matchAll(/"baseUrl":"(.*?)"/g)].map(m => m[1]);
+        const langs = [...captionMatch[1].matchAll(/"languageCode":"(.*?)"/g)].map(m => m[1]);
+        let idx = langs.findIndex(l => l.startsWith("en"));
+        if (idx < 0) idx = 0;
+        const raw = urls[idx];
+        if (raw) {
+          const captionUrl = raw.replace(/\\u0026/g, "&").replace(/\\\//g, "/");
+          transcript = await fetchCaptionText(captionUrl);
         }
       }
     }
   } catch { /* ignore */ }
 
+  // Fallback: YouTube's public timedtext endpoint (works for many videos
+  // even when the watch page yields no caption tracks)
+  if (!transcript) {
+    for (const lang of ["en", "en-US", "en-GB"]) {
+      transcript = await fetchCaptionText(`https://www.youtube.com/api/timedtext?lang=${lang}&v=${id}`);
+      if (transcript) break;
+    }
+  }
+
   return { title, author, description, transcript };
+}
+
+async function fetchCaptionText(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
+    });
+    if (!res.ok) return null;
+    const xml = await res.text();
+    const text = xml
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/\s+/g, " ")
+      .trim();
+    return text.length > 0 ? text : null;
+  } catch {
+    return null;
+  }
 }
 
 // ─── General URL extraction ───────────────────────────────────────────────────

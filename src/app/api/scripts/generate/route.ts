@@ -41,6 +41,20 @@ const DURATION_MAP: Record<string, string> = {
   "30min": "30 minutes (about 4500 words)",
 };
 
+// Approx words for each duration, used to size the model's output budget so
+// longer scripts are never truncated mid-sentence (~1.4 tokens per word + headroom).
+const DURATION_WORDS: Record<string, number> = {
+  "30s": 75, "1min": 150, "2min": 300, "3min": 450,
+  "5min": 750, "10min": 1500, "15min": 2250, "30min": 4500,
+};
+
+function maxTokensForDuration(duration: string, rich: boolean): number {
+  const words = DURATION_WORDS[duration] ?? 300;
+  // 1.5 tokens/word + 600 token buffer; rich output adds JSON scaffolding.
+  const base = Math.ceil(words * 1.5) + 600 + (rich ? 900 : 0);
+  return Math.min(Math.max(base, 1500), 16000); // gpt-4o supports up to 16k completion tokens
+}
+
 export async function POST(req: NextRequest) {
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json({ error: "OPENAI_API_KEY is not configured on the server." }, { status: 500 });
@@ -101,7 +115,7 @@ ${outputMode === "rich" ? `Return a JSON object with these fields:
           { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: outputMode === "rich" ? 2500 : 1500,
+        max_tokens: maxTokensForDuration(duration, outputMode === "rich"),
         response_format: outputMode === "rich" ? { type: "json_object" } : undefined,
       });
 
@@ -149,7 +163,7 @@ Write the script now:`;
         { role: "user", content: userPrompt },
       ],
       temperature: 0.7,
-      max_tokens: 1500,
+      max_tokens: maxTokensForDuration(duration, false),
     });
 
     return NextResponse.json({ script: completion.choices[0]?.message?.content ?? "" });

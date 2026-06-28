@@ -46,28 +46,30 @@ export default function AICoachPage() {
 
   async function startSession() {
     setStarted(true);
-    setMessages([]);
-    setThinking(true);
     setError("");
 
-    // Kick off with an opening message
-    const opening: Message[] = [{ role: "user", content: `I'd like to practice: ${topic}` }];
-    await sendToCoach(opening);
+    // Kick off with an opening message (stored for context, hidden in the UI)
+    const opening: Message = { role: "user", content: `I'd like to practice: ${topic}` };
+    setMessages([opening]);
+    await sendToCoach([opening]);
   }
 
-  async function sendToCoach(msgs: Message[]) {
+  // Sends the full conversation history to the coach and appends only the
+  // assistant's reply (callers are responsible for adding the user's message).
+  async function sendToCoach(history: Message[]) {
     setThinking(true);
+    setError("");
     try {
       const res = await fetch("/api/ai-coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: msgs }),
+        body: JSON.stringify({ messages: history }),
       });
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      if (!res.ok || data.error) throw new Error(data.error || "Failed to get response");
 
       const assistantMsg: Message = { role: "assistant", content: data.text };
-      setMessages((prev) => [...prev.filter((m) => !(m.role === "user" && m.content.startsWith("I'd like to practice:"))), ...msgs.slice(-1), assistantMsg]);
+      setMessages((prev) => [...prev, assistantMsg]);
 
       if (data.audio && !muted) {
         await playAudio(data.audio);
@@ -158,7 +160,7 @@ export default function AICoachPage() {
           </div>
           <div>
             <h2 className="font-bold text-[#1F1F1F] text-lg mb-1">Meet Coach Alex</h2>
-            <p className="text-sm text-[#636363]">Your AI speech coach powered by GPT-4o + ElevenLabs voice. Choose a topic and start speaking.</p>
+            <p className="text-sm text-[#636363]">Your AI speech coach powered by GPT-4o with natural voice replies. Choose a topic and start speaking.</p>
           </div>
 
           <div>
@@ -193,7 +195,7 @@ export default function AICoachPage() {
           {[
             { icon: "🎙️", label: "Speak naturally", desc: "Hold the mic button and talk" },
             { icon: "🤖", label: "AI responds", desc: "GPT-4o generates coaching" },
-            { icon: "🔊", label: "Hear feedback", desc: "ElevenLabs voices the reply" },
+            { icon: "🔊", label: "Hear feedback", desc: "The coach voices the reply" },
           ].map(({ icon, label, desc }) => (
             <div key={label} className="bg-white border border-[#E0E0E0] rounded-lg p-4">
               <div className="text-2xl mb-2">{icon}</div>
@@ -240,7 +242,9 @@ export default function AICoachPage() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
-        {messages.map((msg, i) => (
+        {messages
+          .filter((m) => !(m.role === "user" && m.content.startsWith("I'd like to practice:")))
+          .map((msg, i) => (
           <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === "assistant" ? "bg-[#E8F1FF]" : "bg-[#F5F5F5]"}`}>
               {msg.role === "assistant" ? <Bot size={15} className="text-[#0056D2]" /> : <User size={15} className="text-[#636363]" />}
