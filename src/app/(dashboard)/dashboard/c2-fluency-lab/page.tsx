@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import {
   Mic, Square, Loader2, GraduationCap, ArrowLeft, RotateCcw, Sparkles,
   CheckCircle, AlertCircle, TrendingUp, BookOpen, Volume2, Music, Zap,
-  MessageSquare, Target, Repeat, Lightbulb, Printer,
+  MessageSquare, Target, Repeat, Lightbulb, Printer, Play, Pause,
 } from "lucide-react";
 
 // ─── Scenarios ────────────────────────────────────────────────────────────────
@@ -109,6 +109,55 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
     <div className={`rounded-xl p-5 ${className}`} style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
       {children}
     </div>
+  );
+}
+
+// Fetches AI voice for a line and plays it — for shadowing practice.
+function ListenButton({ text, label = "Listen", filled = false }: { text: string; label?: string; filled?: boolean }) {
+  const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const cacheRef = useRef<string | null>(null);
+
+  async function play() {
+    if (state === "playing") { audioRef.current?.pause(); setState("idle"); return; }
+    try {
+      let b64 = cacheRef.current;
+      if (!b64) {
+        setState("loading");
+        const res = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.audio) throw new Error(data.error || "TTS failed");
+        b64 = data.audio as string;
+        cacheRef.current = b64;
+      }
+      const audio = new Audio(`data:audio/mpeg;base64,${b64}`);
+      audioRef.current = audio;
+      audio.onended = () => setState("idle");
+      audio.onerror = () => setState("idle");
+      setState("playing");
+      await audio.play().catch(() => setState("idle"));
+    } catch {
+      setState("idle");
+    }
+  }
+
+  const baseStyle = filled
+    ? { background: "var(--accent)", color: "#fff", border: "none" }
+    : { background: "var(--bg-card)", color: "var(--accent)", border: "1px solid var(--accent)" };
+
+  return (
+    <button onClick={play} disabled={state === "loading"}
+      className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors"
+      style={baseStyle}>
+      {state === "loading" ? <Loader2 size={13} className="animate-spin" />
+        : state === "playing" ? <Pause size={13} />
+        : <Play size={13} />}
+      {state === "loading" ? "Loading…" : state === "playing" ? "Stop" : label}
+    </button>
   );
 }
 
@@ -417,7 +466,10 @@ export default function C2FluencyLabPage() {
                 <p className="text-sm italic" style={{ color: "var(--text-secondary)" }}>“{r.nativeRewrite.original}”</p>
               </div>
               <div className="rounded-lg p-3" style={{ background: "#E6F7F2", border: "1px solid #00B37D" }}>
-                <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#00875A" }}>C2-level version</p>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "#00875A" }}>C2-level version</p>
+                  <ListenButton text={r.nativeRewrite.c2Version} label="Listen" />
+                </div>
                 <p className="text-sm font-medium" style={{ color: "#0A5C42" }}>“{r.nativeRewrite.c2Version}”</p>
               </div>
               {r.nativeRewrite.whyBetter?.length > 0 && (
@@ -545,11 +597,14 @@ export default function C2FluencyLabPage() {
         {r.shadowingSentence && (
           <Card className="!p-0 overflow-hidden">
             <div className="p-5" style={{ background: "var(--accent-bg)" }}>
-              <h2 className="font-bold mb-2 flex items-center gap-2" style={{ color: "var(--accent)" }}>
-                <Repeat size={16} /> Shadow This Sentence
-              </h2>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <h2 className="font-bold flex items-center gap-2" style={{ color: "var(--accent)" }}>
+                  <Repeat size={16} /> Shadow This Sentence
+                </h2>
+                <ListenButton text={r.shadowingSentence} label="Play & shadow" filled />
+              </div>
               <p className="text-base font-medium mb-1" style={{ color: "var(--text-primary)" }}>“{r.shadowingSentence}”</p>
-              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Listen in your head, then repeat it 3× — match the rhythm and stress, not the accent.</p>
+              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Press play, listen to the rhythm, then repeat it 3× — match the stress and melody, not the accent.</p>
             </div>
           </Card>
         )}

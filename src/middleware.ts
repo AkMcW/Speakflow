@@ -17,6 +17,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/ai-coach(.*)",
   "/api/pitch/(.*)",
   "/api/c2/(.*)",
+  "/api/tts(.*)",
   "/report(.*)",
 ]);
 
