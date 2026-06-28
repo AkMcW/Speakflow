@@ -27,6 +27,7 @@ export const PLAN_FEATURES: Record<Plan, {
   canUseProgress: boolean;
   canUsePitchCoach: boolean;
   canUseC2Lab: boolean;
+  canUseExamMode: boolean;
   sessionsLimit: number;
 }> = {
   free: {
@@ -44,6 +45,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseProgress: false,
     canUsePitchCoach: false,
     canUseC2Lab: false,
+    canUseExamMode: false,
     sessionsLimit: 5,
   },
   starter: {
@@ -61,6 +63,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseProgress: true,
     canUsePitchCoach: false,
     canUseC2Lab: false,
+    canUseExamMode: false,
     sessionsLimit: 50,
   },
   pro: {
@@ -78,6 +81,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseProgress: true,
     canUsePitchCoach: true,
     canUseC2Lab: true,
+    canUseExamMode: true,
     sessionsLimit: 999,
   },
   pro_plus: {
@@ -95,6 +99,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseProgress: true,
     canUsePitchCoach: true,
     canUseC2Lab: true,
+    canUseExamMode: true,
     sessionsLimit: 999,
   },
   team: {
@@ -112,6 +117,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseProgress: true,
     canUsePitchCoach: true,
     canUseC2Lab: true,
+    canUseExamMode: true,
     sessionsLimit: 999,
   },
   admin: {
@@ -129,6 +135,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseProgress: true,
     canUsePitchCoach: true,
     canUseC2Lab: true,
+    canUseExamMode: true,
     sessionsLimit: 999,
   },
 };

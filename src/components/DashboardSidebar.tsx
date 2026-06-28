@@ -5,7 +5,7 @@ import {
   LayoutDashboard, FileText, Mic, BarChart2, BookOpen,
   Briefcase, Monitor, Users, Settings, CreditCard, Save, Target,
   Mic2, ShieldCheck, Bot, AudioLines, BookMarked, Zap,
-  ChevronLeft, ChevronRight, Library, Wand2, History, GraduationCap,
+  ChevronLeft, ChevronRight, Library, Wand2, History, GraduationCap, ClipboardCheck,
 } from "lucide-react";
 import { useUser as useClerkUser } from "@clerk/nextjs";
 import { ADMIN_EMAIL, PLAN_FEATURES } from "@/lib/users";
@@ -41,6 +41,7 @@ const navSections = [
       { label: "PTE Academic", href: "/dashboard/pte", icon: BookMarked, feature: "canUsePTE" },
       { label: "Pitch Coach", href: "/dashboard/pitch", icon: Target, feature: "canUsePitchCoach" },
       { label: "C2 Fluency Lab", href: "/dashboard/c2-fluency-lab", icon: GraduationCap, feature: "canUseC2Lab" },
+      { label: "Exam Speaking", href: "/dashboard/exam-speaking", icon: ClipboardCheck, feature: "canUseExamMode" },
       { label: "Interview", href: "/dashboard/interview", icon: Briefcase, feature: "canUseInterview" },
       { label: "Presentation", href: "/dashboard/presentation", icon: Monitor, feature: "canUsePresentation" },
       { label: "Virtual Audience", href: "/dashboard/audience", icon: Users, feature: "canUseAudience" },
