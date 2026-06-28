@@ -102,3 +102,24 @@ export async function ensureC2SessionsTable() {
   await s`CREATE INDEX IF NOT EXISTS c2_sessions_user_id_idx ON c2_sessions(user_id)`;
   c2TableReady = true;
 }
+
+let examTableReady = false;
+
+export async function ensureExamSessionsTable() {
+  if (examTableReady) return;
+  const s = getSql();
+  await s`
+    CREATE TABLE IF NOT EXISTS exam_sessions (
+      id               SERIAL PRIMARY KEY,
+      user_id          TEXT NOT NULL,
+      exam_id          TEXT NOT NULL DEFAULT '',
+      exam_name        TEXT NOT NULL DEFAULT '',
+      task_name        TEXT NOT NULL DEFAULT '',
+      native_score     TEXT NOT NULL DEFAULT '',
+      score_out_of_100 INTEGER NOT NULL DEFAULT 0,
+      created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await s`CREATE INDEX IF NOT EXISTS exam_sessions_user_id_idx ON exam_sessions(user_id)`;
+  examTableReady = true;
+}

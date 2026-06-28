@@ -3,13 +3,14 @@
 // reads this data, so adding a test = adding data (no new page).
 
 export type TaskType =
-  | "question"      // answer a spoken question
-  | "topic-card"    // long-turn with bullet points (IELTS Part 2 style)
-  | "read-aloud"    // read the given text aloud
-  | "describe-info" // describe a chart/image brief
-  | "retell"        // retell a short lecture/passage in your own words
-  | "roleplay"      // professional role-play (OET)
-  | "opinion";      // express & defend an opinion
+  | "question"        // answer a spoken question
+  | "topic-card"      // long-turn with bullet points (IELTS Part 2 style)
+  | "read-aloud"      // read the given text aloud
+  | "repeat-sentence" // hear a sentence (TTS) once, then repeat it
+  | "describe-info"   // describe a chart/image brief
+  | "retell"          // retell a short lecture/passage in your own words
+  | "roleplay"        // professional role-play (OET)
+  | "opinion";        // express & defend an opinion
 
 export interface ExamTask {
   id: string;
@@ -130,6 +131,17 @@ export const EXAM_TRACKS: ExamTrack[] = [
         prompts: [
           "The rapid growth of renewable energy has transformed global markets, with solar and wind now cheaper than fossil fuels in many regions, accelerating the transition to a low-carbon economy.",
           "Universities increasingly rely on data analytics to predict student performance, allowing earlier intervention, though critics warn that over-reliance on metrics may overlook individual circumstances.",
+        ],
+      },
+      {
+        id: "pte-repeat", name: "Repeat Sentence", type: "repeat-sentence",
+        instruction: "Listen to the sentence once, then repeat it exactly. You won't see the text — rely on your ears.",
+        prepSeconds: 0, responseSeconds: 20,
+        prompts: [
+          "The library extends its opening hours during the examination period.",
+          "Students must submit their research proposals before the end of the semester.",
+          "The conference has been rescheduled to accommodate international participants.",
+          "Renewable energy sources are becoming increasingly cost-effective worldwide.",
         ],
       },
       {

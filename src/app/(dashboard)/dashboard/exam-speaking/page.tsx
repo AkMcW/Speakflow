@@ -3,10 +3,20 @@ import { useState, useRef, useEffect } from "react";
 import { EXAM_TRACKS, ExamTrack, ExamTask } from "@/data/examTracks";
 import {
   Mic, Square, Loader2, ClipboardCheck, ArrowLeft, RotateCcw, Clock,
-  CheckCircle, AlertCircle, Lightbulb, Printer, Sparkles, BookOpen, Pause, Play,
+  CheckCircle, AlertCircle, Lightbulb, Printer, Sparkles, BookOpen, Pause, Play, Volume2,
 } from "lucide-react";
 
-type Flow = "exam" | "task" | "ready" | "prep" | "recording" | "transcribing" | "analyzing" | "report";
+type Flow = "exam" | "task" | "ready" | "listening" | "prep" | "recording" | "transcribing" | "analyzing" | "report";
+
+interface ExamAttempt {
+  id: number;
+  exam_id: string;
+  exam_name: string;
+  task_name: string;
+  native_score: string;
+  score_out_of_100: number;
+  created_at: string;
+}
 
 interface ExamResult {
   nativeScore: string;
@@ -81,7 +91,9 @@ export default function ExamSpeakingPage() {
   const [transcript, setTranscript] = useState("");
   const [result, setResult] = useState<ExamResult | null>(null);
   const [error, setError] = useState("");
+  const [attempts, setAttempts] = useState<ExamAttempt[] | null>(null);
 
+  const promptAudioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prepRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -90,19 +102,52 @@ export default function ExamSpeakingPage() {
   useEffect(() => () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (prepRef.current) clearInterval(prepRef.current);
+    if (promptAudioRef.current) promptAudioRef.current.pause();
   }, []);
+
+  // Load attempt history whenever we return to the exam hub.
+  useEffect(() => {
+    if (flow !== "exam") return;
+    let active = true;
+    fetch("/api/exam/sessions")
+      .then((r) => r.json())
+      .then((d) => { if (active) setAttempts(Array.isArray(d.sessions) ? d.sessions : []); })
+      .catch(() => { if (active) setAttempts([]); });
+    return () => { active = false; };
+  }, [flow]);
 
   function pickTask(t: ExamTask) {
     setTask(t);
-    setPrompt(t.prompts[0]);
+    // Repeat-sentence is heard, not read — pick one at random so it isn't revealed.
+    setPrompt(t.type === "repeat-sentence" ? t.prompts[Math.floor(Math.random() * t.prompts.length)] : t.prompts[0]);
     setResult(null);
     setTranscript("");
     setError("");
     setFlow("ready");
   }
 
+  async function playThenRecord() {
+    setFlow("listening");
+    try {
+      const res = await fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: prompt }) });
+      const data = await res.json();
+      if (res.ok && data.audio) {
+        const audio = new Audio(`data:audio/mpeg;base64,${data.audio}`);
+        promptAudioRef.current = audio;
+        audio.onended = () => startRecording();
+        audio.onerror = () => startRecording();
+        await audio.play().catch(() => startRecording());
+      } else {
+        startRecording();
+      }
+    } catch {
+      startRecording();
+    }
+  }
+
   function beginTask() {
     if (!task) return;
+    if (task.type === "repeat-sentence") { playThenRecord(); return; }
     if (task.prepSeconds > 0) {
       setPrepLeft(task.prepSeconds);
       setFlow("prep");
@@ -179,6 +224,15 @@ export default function ExamSpeakingPage() {
       if (!res.ok) throw new Error(data.error ?? "Analysis failed");
       setResult(data);
       setFlow("report");
+      // Save the attempt for history & trend (non-blocking)
+      fetch("/api/exam/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          examId: track?.id, examName: track?.name, taskName: task?.name,
+          nativeScore: data.nativeScore ?? "", scoreOutOf100: data.scoreOutOf100 ?? 0,
+        }),
+      }).catch(() => {});
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setFlow("ready");
@@ -221,6 +275,28 @@ export default function ExamSpeakingPage() {
             </button>
           ))}
         </div>
+
+        {/* Recent attempts */}
+        {attempts && attempts.length > 0 && (
+          <Card>
+            <h2 className="font-bold mb-3 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+              <Clock size={16} style={{ color: "var(--accent)" }} /> Your Recent Attempts
+            </h2>
+            <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+              {attempts.slice(0, 8).map((a) => (
+                <div key={a.id} className="flex items-center justify-between py-2.5 gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{a.exam_name} — {a.task_name}</p>
+                    <p className="text-[11px]" style={{ color: "var(--text-secondary)" }}>{new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                  </div>
+                  <span className="text-sm font-bold px-2.5 py-1 rounded-full shrink-0" style={{ background: `${scoreColor(a.score_out_of_100)}20`, color: scoreColor(a.score_out_of_100) }}>
+                    {a.native_score}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
       </div>
     );
   }
@@ -261,7 +337,8 @@ export default function ExamSpeakingPage() {
   }
 
   // ── Ready / prep / recording / processing ──
-  if (track && task && (flow === "ready" || flow === "prep" || flow === "recording" || flow === "transcribing" || flow === "analyzing")) {
+  if (track && task && (flow === "ready" || flow === "listening" || flow === "prep" || flow === "recording" || flow === "transcribing" || flow === "analyzing")) {
+    const isRepeat = task.type === "repeat-sentence";
     return (
       <div className="max-w-2xl mx-auto space-y-5">
         <button onClick={() => setFlow("task")} className="flex items-center gap-1.5 text-sm" style={{ color: "var(--text-secondary)" }}>
@@ -275,8 +352,8 @@ export default function ExamSpeakingPage() {
           </div>
         </div>
 
-        {/* Prompt selection (only before starting) */}
-        {flow === "ready" && task.prompts.length > 1 && (
+        {/* Prompt selection (only before starting; not for repeat-sentence — it's heard, not chosen) */}
+        {flow === "ready" && !isRepeat && task.prompts.length > 1 && (
           <Card>
             <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-secondary)" }}>Choose a prompt</p>
             <div className="space-y-2">
@@ -293,16 +370,22 @@ export default function ExamSpeakingPage() {
           </Card>
         )}
 
-        {/* The prompt / text being worked on */}
-        <Card>
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-              {task.type === "read-aloud" ? "Read this aloud" : "Your prompt"}
-            </p>
-            {task.type === "read-aloud" && <ListenButton text={prompt} />}
-          </div>
-          <p className={task.type === "read-aloud" ? "text-base leading-relaxed" : "text-base font-medium"} style={{ color: "var(--text-primary)" }}>{prompt}</p>
-        </Card>
+        {/* The prompt / text being worked on (hidden for repeat-sentence so it isn't revealed) */}
+        {isRepeat ? (
+          <Card className="text-center">
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>🔊 You'll hear one sentence. Listen carefully, then repeat it exactly from memory.</p>
+          </Card>
+        ) : (
+          <Card>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                {task.type === "read-aloud" ? "Read this aloud" : "Your prompt"}
+              </p>
+              {task.type === "read-aloud" && <ListenButton text={prompt} />}
+            </div>
+            <p className={task.type === "read-aloud" ? "text-base leading-relaxed" : "text-base font-medium"} style={{ color: "var(--text-primary)" }}>{prompt}</p>
+          </Card>
+        )}
 
         {error && (
           <div className="flex items-center gap-2 p-3 rounded-lg text-sm" style={{ background: "#FFF0F0", border: "1px solid #FFCDD2", color: "#E53935" }}>
@@ -314,14 +397,21 @@ export default function ExamSpeakingPage() {
           {flow === "ready" && (
             <>
               <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                {task.prepSeconds > 0 ? `${task.prepSeconds}s preparation, then ${task.responseSeconds}s to respond.` : `Speak for up to ${task.responseSeconds}s.`}
+                {isRepeat ? "Press play, listen once, then repeat the sentence." : task.prepSeconds > 0 ? `${task.prepSeconds}s preparation, then ${task.responseSeconds}s to respond.` : `Speak for up to ${task.responseSeconds}s.`}
               </p>
               <button onClick={beginTask}
                 className="w-20 h-20 rounded-full text-white flex items-center justify-center shadow-lg pulse-ring transition-colors"
                 style={{ background: track.color }}>
-                <Mic size={34} />
+                {isRepeat ? <Play size={34} /> : <Mic size={34} />}
               </button>
-              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{task.prepSeconds > 0 ? "Start preparation" : "Start recording"}</p>
+              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{isRepeat ? "Play the sentence" : task.prepSeconds > 0 ? "Start preparation" : "Start recording"}</p>
+            </>
+          )}
+          {flow === "listening" && (
+            <>
+              <Volume2 size={34} style={{ color: track.color }} className="animate-pulse" />
+              <p className="font-semibold" style={{ color: "var(--text-primary)" }}>Listen carefully…</p>
+              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Recording starts automatically when the sentence ends.</p>
             </>
           )}
           {flow === "prep" && (
@@ -456,18 +546,32 @@ export default function ExamSpeakingPage() {
           )}
         </div>
 
-        {/* Model answer */}
-        {r.modelAnswer && (
+        {/* The sentence they had to repeat — revealed now for comparison */}
+        {task.type === "repeat-sentence" && (
           <Card>
             <div className="flex items-center justify-between gap-2 mb-2">
-              <h2 className="font-bold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-                <Sparkles size={16} style={{ color: track.color }} /> {task.type === "read-aloud" ? "Delivery Tips" : "Model Answer"}
-              </h2>
-              {task.type !== "read-aloud" && <ListenButton text={r.modelAnswer} />}
+              <h2 className="font-bold flex items-center gap-2" style={{ color: "var(--text-primary)" }}><Volume2 size={16} style={{ color: track.color }} /> The Sentence</h2>
+              <ListenButton text={prompt} />
             </div>
-            <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>{r.modelAnswer}</p>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>{prompt}</p>
           </Card>
         )}
+
+        {/* Model answer */}
+        {r.modelAnswer && (() => {
+          const sourceTask = task.type === "read-aloud" || task.type === "repeat-sentence";
+          return (
+            <Card>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <h2 className="font-bold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+                  <Sparkles size={16} style={{ color: track.color }} /> {sourceTask ? "Delivery Tips" : "Model Answer"}
+                </h2>
+                {!sourceTask && <ListenButton text={r.modelAnswer} />}
+              </div>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>{r.modelAnswer}</p>
+            </Card>
+          );
+        })()}
 
         {/* Examiner tip */}
         {r.examinerTip && (

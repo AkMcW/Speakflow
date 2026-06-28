@@ -55,12 +55,14 @@ export async function POST(req: NextRequest) {
 
     const rubric = EXAM_RUBRICS[examId] ?? EXAM_RUBRICS.ielts;
     const isReadAloud = taskType === "read-aloud";
+    const isRepeat = taskType === "repeat-sentence";
+    const sourceTask = isReadAloud || isRepeat;
 
     const system = `You are an official examiner for ${examName || "an English speaking exam"}. Score the candidate's spoken response strictly and fairly using the real exam's criteria.
 
 EXAM: ${examName}
 TASK: ${taskName} (${taskType})
-${isReadAloud ? `The candidate was asked to READ THIS TEXT ALOUD:\n"""${prompt}"""\nJudge accuracy to the source, fluency, and pronunciation. Penalize skipped/changed words.` : `The candidate was responding to this prompt:\n"""${prompt}"""`}
+${isRepeat ? `The candidate HEARD this sentence once and had to REPEAT it exactly (from memory):\n"""${prompt}"""\nScore primarily on how completely and accurately they reproduced it — every correct word in the right order matters. Also judge fluency and pronunciation.` : isReadAloud ? `The candidate was asked to READ THIS TEXT ALOUD:\n"""${prompt}"""\nJudge accuracy to the source, fluency, and pronunciation. Penalize skipped/changed words.` : `The candidate was responding to this prompt:\n"""${prompt}"""`}
 
 SCORING SCALE: ${rubric.scale}
 SCORING GUIDE: ${rubric.guide}
@@ -75,7 +77,7 @@ ${rubric.criteria.map((c) => `    { "name": "${c}", "score": <0-100>, "comment":
   ],
   "strengths": [<2-3 specific strengths citing the transcript>],
   "improvements": [<2-3 specific, actionable improvements>],
-  "modelAnswer": "<a concise high-scoring model response to the same prompt (${isReadAloud ? "for read-aloud, give 2-3 delivery tips instead of a rewrite" : "2-4 sentences"})>",
+  "modelAnswer": "<${sourceTask ? "2-3 short delivery/accuracy tips instead of a rewrite" : "a concise high-scoring model response to the same prompt, 2-4 sentences"}>",
   "examinerTip": "<the single most useful tip to raise the score on this exam>"
 }
 
