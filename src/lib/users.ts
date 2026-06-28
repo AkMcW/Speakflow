@@ -26,6 +26,7 @@ export const PLAN_FEATURES: Record<Plan, {
   canUseAudience: boolean;
   canUseProgress: boolean;
   canUsePitchCoach: boolean;
+  canUseC2Lab: boolean;
   sessionsLimit: number;
 }> = {
   free: {
@@ -42,6 +43,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseAudience: false,
     canUseProgress: false,
     canUsePitchCoach: false,
+    canUseC2Lab: false,
     sessionsLimit: 5,
   },
   starter: {
@@ -58,6 +60,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseAudience: false,
     canUseProgress: true,
     canUsePitchCoach: false,
+    canUseC2Lab: false,
     sessionsLimit: 50,
   },
   pro: {
@@ -74,6 +77,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseAudience: false,
     canUseProgress: true,
     canUsePitchCoach: true,
+    canUseC2Lab: true,
     sessionsLimit: 999,
   },
   pro_plus: {
@@ -90,6 +94,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseAudience: true,
     canUseProgress: true,
     canUsePitchCoach: true,
+    canUseC2Lab: true,
     sessionsLimit: 999,
   },
   team: {
@@ -106,6 +111,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseAudience: true,
     canUseProgress: true,
     canUsePitchCoach: true,
+    canUseC2Lab: true,
     sessionsLimit: 999,
   },
   admin: {
@@ -122,6 +128,7 @@ export const PLAN_FEATURES: Record<Plan, {
     canUseAudience: true,
     canUseProgress: true,
     canUsePitchCoach: true,
+    canUseC2Lab: true,
     sessionsLimit: 999,
   },
 };
