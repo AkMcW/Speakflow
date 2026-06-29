@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Mic, Square, Clock, BarChart2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Mic, Square, Clock, BarChart2, Sparkles, Save, CheckCircle, Loader2, Mic2, Lightbulb } from "lucide-react";
 
 type Part = "1" | "2" | "3";
 type RecordState = "idle" | "prep" | "recording" | "transcribing" | "analyzing" | "done";
@@ -58,6 +59,11 @@ export default function IELTSPage() {
   const [cardIndex, setCardIndex] = useState(0);
   const [result, setResult] = useState<BandResult | null>(null);
   const [error, setError] = useState("");
+  const [userTranscript, setUserTranscript] = useState("");
+  const [rewrite, setRewrite] = useState<{ rewrite: string; tips: string[] } | null>(null);
+  const [rewriteLoading, setRewriteLoading] = useState(false);
+  const [savedRewrite, setSavedRewrite] = useState(false);
+  const router = useRouter();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -157,12 +163,68 @@ export default function IELTSPage() {
           overall: data.bandScore ?? Math.round(((data.scores?.fluency ?? 7) + (data.scores?.vocabulary ?? 6.5) + (data.scores?.structure ?? 6.5) + (data.scores?.pronunciation ?? 7)) / 4 * 2) / 2,
           feedback: data.aiFeedback ?? "",
         });
+        setUserTranscript(transcript);
         setRecordState("done");
+        fetchRewrite(transcript);
       } catch {
         setError("Analysis failed.");
         setRecordState("idle");
       }
     };
+  }
+
+  function currentPromptText() {
+    if (activePart === "1") return part1Questions[q1Index];
+    if (activePart === "2") {
+      const c = part2Cards[cardIndex];
+      return `${c.topic} You should say: ${c.points.join("; ")}.`;
+    }
+    return part3Questions[q3Index];
+  }
+
+  async function fetchRewrite(transcript: string) {
+    setRewrite(null);
+    setSavedRewrite(false);
+    setRewriteLoading(true);
+    const partLabel = activePart === "1" ? "Part 1" : activePart === "2" ? "Part 2 (cue card long turn)" : "Part 3";
+    try {
+      const res = await fetch("/api/ielts/rewrite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript, part: partLabel, prompt: currentPromptText() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.rewrite) setRewrite({ rewrite: data.rewrite, tips: Array.isArray(data.tips) ? data.tips : [] });
+    } catch {
+      /* rewrite is best-effort */
+    } finally {
+      setRewriteLoading(false);
+    }
+  }
+
+  async function saveRewriteScript() {
+    if (!rewrite?.rewrite) return;
+    try {
+      const res = await fetch("/api/scripts/saved", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `IELTS ${activePart === "1" ? "Part 1" : activePart === "2" ? "Part 2" : "Part 3"} — Model Answer`,
+          scenario: `IELTS Speaking Part ${activePart}`,
+          content: rewrite.rewrite,
+          wordCount: rewrite.rewrite.split(/\s+/).filter(Boolean).length,
+          duration: activePart === "2" ? "2min" : "1min",
+        }),
+      });
+      if (res.ok) { setSavedRewrite(true); setTimeout(() => setSavedRewrite(false), 3000); }
+    } catch { /* ignore */ }
+  }
+
+  function practiceRewrite() {
+    if (!rewrite?.rewrite) return;
+    sessionStorage.setItem("sf_practice_script", rewrite.rewrite);
+    sessionStorage.setItem("sf_practice_scenario", `IELTS Speaking Part ${activePart}`);
+    router.push("/dashboard/practice");
   }
 
   function reset() {
@@ -172,6 +234,10 @@ export default function IELTSPage() {
     setSpeakTimer(0);
     setResult(null);
     setError("");
+    setUserTranscript("");
+    setRewrite(null);
+    setRewriteLoading(false);
+    setSavedRewrite(false);
     if (mediaRecorderRef.current) {
       try { mediaRecorderRef.current.stream.getTracks().forEach((t) => t.stop()); } catch { /* ignore */ }
     }
@@ -291,6 +357,69 @@ export default function IELTSPage() {
           <button onClick={reset} className="mt-4 text-xs border border-[#0056D2] text-[#0056D2] hover:bg-[#E8F1FF] px-4 py-1.5 rounded font-semibold transition-colors">
             Practice Again
           </button>
+        </div>
+      )}
+
+      {/* Model answer rewrite */}
+      {recordState === "done" && (
+        <div className="bg-white border border-[#E0E0E0] rounded-lg p-6">
+          <h2 className="font-bold text-[#1F1F1F] mb-1 flex items-center gap-2">
+            <Sparkles size={17} className="text-[#0056D2]" /> Recommended Model Answer
+          </h2>
+          <p className="text-xs text-[#636363] mb-4">A Band 8.5–9 rewrite of your answer with a clear, correct structure — keep practicing with this version.</p>
+
+          {rewriteLoading && (
+            <div className="flex items-center gap-2 text-sm text-[#636363] py-6 justify-center">
+              <Loader2 size={16} className="animate-spin text-[#0056D2]" /> Building your model answer…
+            </div>
+          )}
+
+          {!rewriteLoading && rewrite && (
+            <>
+              {userTranscript && (
+                <details className="mb-4">
+                  <summary className="text-xs font-semibold text-[#636363] cursor-pointer">View what you said</summary>
+                  <p className="text-xs text-[#636363] leading-relaxed mt-2 bg-[#F5F5F5] rounded-lg p-3">{userTranscript}</p>
+                </details>
+              )}
+
+              <div className="bg-[#F0F7FF] border border-[#CFE3FF] rounded-lg p-4 mb-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#0056D2] mb-2">Model Answer</p>
+                <p className="text-sm text-[#1F1F1F] leading-relaxed whitespace-pre-wrap">{rewrite.rewrite}</p>
+              </div>
+
+              {rewrite.tips.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-bold text-[#1F1F1F] mb-2 flex items-center gap-1.5"><Lightbulb size={13} className="text-[#F5A623]" /> Structure tips</p>
+                  <ul className="space-y-1.5">
+                    {rewrite.tips.map((t, i) => (
+                      <li key={i} className="text-xs text-[#636363] flex items-start gap-2">
+                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#0056D2] shrink-0" /> {t}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-3">
+                <button onClick={practiceRewrite}
+                  className="flex items-center gap-1.5 bg-[#0056D2] hover:bg-[#003B8E] text-white font-semibold px-4 py-2 rounded text-sm transition-colors">
+                  <Mic2 size={14} /> Practice this answer
+                </button>
+                <button onClick={saveRewriteScript} disabled={savedRewrite}
+                  className="flex items-center gap-1.5 border border-[#0056D2] text-[#0056D2] hover:bg-[#E8F1FF] font-semibold px-4 py-2 rounded text-sm transition-colors disabled:opacity-70">
+                  {savedRewrite ? <><CheckCircle size={14} className="text-[#00B37D]" /> Saved</> : <><Save size={14} /> Save for practice</>}
+                </button>
+              </div>
+            </>
+          )}
+
+          {!rewriteLoading && !rewrite && (
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm text-[#636363]">Couldn&apos;t build a model answer.</p>
+              <button onClick={() => fetchRewrite(userTranscript)} className="text-xs font-semibold text-[#0056D2] hover:underline">Try again</button>
+            </div>
+          )}
         </div>
       )}
     </div>

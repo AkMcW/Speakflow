@@ -192,29 +192,40 @@ export default function SessionResultsPage() {
         return (
           <div key={session.id} className="rounded-lg overflow-hidden" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
             {/* Summary row */}
-            <button
-              onClick={() => setExpanded(isOpen ? null : session.id)}
-              className="w-full flex items-center gap-4 px-5 py-4 text-left transition-colors hover:opacity-90"
-            >
-              {/* Score badge */}
-              <div className="flex flex-col items-center justify-center w-14 h-14 rounded-full shrink-0"
-                style={{ background: `${scoreColor(overall)}1A`, border: `2px solid ${scoreColor(overall)}` }}>
-                <span className="text-lg font-bold leading-none" style={{ color: scoreColor(overall) }}>{overall}</span>
-                <span className="text-[9px] mt-0.5" style={{ color: "var(--text-secondary)" }}>/100</span>
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate" style={{ color: "var(--text-primary)" }}>{session.scenario || "Practice Session"}</p>
-                <div className="flex flex-wrap items-center gap-3 mt-1 text-xs" style={{ color: "var(--text-secondary)" }}>
-                  <span className="flex items-center gap-1"><Calendar size={11} /> {fmtDate(session.created_at)}</span>
-                  <span className="flex items-center gap-1"><Clock size={11} /> {fmtDuration(session.duration_seconds)}</span>
-                  {session.wpm > 0 && <span>{session.wpm} wpm</span>}
-                  {wordErrors.length > 0 && <span style={{ color: "#F5A623" }}>{wordErrors.length} word errors</span>}
+            <div className="w-full flex items-center gap-2 pr-3">
+              <button
+                onClick={() => setExpanded(isOpen ? null : session.id)}
+                className="flex items-center gap-4 px-5 py-4 text-left transition-colors hover:opacity-90 flex-1 min-w-0"
+              >
+                {/* Score badge */}
+                <div className="flex flex-col items-center justify-center w-14 h-14 rounded-full shrink-0"
+                  style={{ background: `${scoreColor(overall)}1A`, border: `2px solid ${scoreColor(overall)}` }}>
+                  <span className="text-lg font-bold leading-none" style={{ color: scoreColor(overall) }}>{overall}</span>
+                  <span className="text-[9px] mt-0.5" style={{ color: "var(--text-secondary)" }}>/100</span>
                 </div>
-              </div>
 
-              <ChevronDown size={18} className="shrink-0 transition-transform" style={{ color: "var(--text-secondary)", transform: isOpen ? "rotate(180deg)" : "none" }} />
-            </button>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate" style={{ color: "var(--text-primary)" }}>{session.scenario || "Practice Session"}</p>
+                  <div className="flex flex-wrap items-center gap-3 mt-1 text-xs" style={{ color: "var(--text-secondary)" }}>
+                    <span className="flex items-center gap-1"><Calendar size={11} /> {fmtDate(session.created_at)}</span>
+                    <span className="flex items-center gap-1"><Clock size={11} /> {fmtDuration(session.duration_seconds)}</span>
+                    {session.wpm > 0 && <span>{session.wpm} wpm</span>}
+                    {wordErrors.length > 0 && <span style={{ color: "#F5A623" }}>{wordErrors.length} word errors</span>}
+                  </div>
+                </div>
+
+                <ChevronDown size={18} className="shrink-0 transition-transform" style={{ color: "var(--text-secondary)", transform: isOpen ? "rotate(180deg)" : "none" }} />
+              </button>
+              <button
+                onClick={() => deleteSession(session.id)}
+                disabled={deleting === session.id}
+                title="Delete this session"
+                className="shrink-0 p-2 rounded-lg border transition-colors disabled:opacity-60"
+                style={{ borderColor: "#FFCDD2", color: "#E53935" }}
+              >
+                {deleting === session.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+              </button>
+            </div>
 
             {/* Expanded detail */}
             {isOpen && (

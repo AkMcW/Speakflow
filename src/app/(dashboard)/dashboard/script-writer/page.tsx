@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Wand2, Copy, RotateCcw, Save, CheckCircle, ChevronDown, ChevronUp, Sparkles, Zap, Mic } from "lucide-react";
+import { Wand2, Copy, RotateCcw, Save, CheckCircle, ChevronDown, ChevronUp, Sparkles, Zap, Mic, Shuffle } from "lucide-react";
 
 // ─── 46 Scenarios ───────────────────────────────────────────────
 const SCENARIOS = [
@@ -228,7 +228,7 @@ export default function ScriptWriterPage() {
   const [loading, setLoading] = useState(false);
   const [optimizing, setOptimizing] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [showPresets, setShowPresets] = useState(true);
+  const [showPresets, setShowPresets] = useState(false);
   const [wordCount, setWordCount] = useState(0);
 
   const [form, setForm] = useState<FormState>({
@@ -243,6 +243,13 @@ export default function ScriptWriterPage() {
   function applyPreset(preset: typeof PRESETS[0]) {
     setForm(preset.form);
     setShowPresets(false);
+  }
+
+  function handleShuffle() {
+    const p = PRESETS[Math.floor(Math.random() * PRESETS.length)];
+    setForm(p.form);
+    setGenerated(false);
+    setSaved(false);
   }
 
   async function handleGenerate() {
@@ -341,16 +348,27 @@ export default function ScriptWriterPage() {
 
       {/* Presets */}
       <div className="bg-white border border-[#E0E0E0] rounded-lg overflow-hidden">
-        <button
-          onClick={() => setShowPresets(!showPresets)}
-          className="w-full flex items-center justify-between px-5 py-3 hover:bg-[#F5F5F5] transition-colors"
-        >
-          <span className="flex items-center gap-2 text-sm font-bold text-[#1F1F1F]">
+        <div className="w-full flex items-center justify-between px-5 py-3 hover:bg-[#F5F5F5] transition-colors">
+          <button
+            onClick={() => setShowPresets(!showPresets)}
+            className="flex items-center gap-2 text-sm font-bold text-[#1F1F1F] flex-1 text-left"
+          >
             <Zap size={15} className="text-[#F5A623]" />
             Quick Presets — start from a template
-          </span>
-          {showPresets ? <ChevronUp size={16} className="text-[#636363]" /> : <ChevronDown size={16} className="text-[#636363]" />}
-        </button>
+          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleShuffle}
+              title="Shuffle — fill the form with a random preset"
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#0056D2] hover:text-[#003B8E] transition-colors"
+            >
+              <Shuffle size={14} /> Shuffle
+            </button>
+            <button onClick={() => setShowPresets(!showPresets)} aria-label="Toggle presets">
+              {showPresets ? <ChevronUp size={16} className="text-[#636363]" /> : <ChevronDown size={16} className="text-[#636363]" />}
+            </button>
+          </div>
+        </div>
         {showPresets && (
           <div className="px-5 pb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 border-t border-[#E0E0E0] pt-4">
             {PRESETS.map((p) => (

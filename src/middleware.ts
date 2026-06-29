@@ -18,6 +18,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/pitch/(.*)",
   "/api/c2/(.*)",
   "/api/exam/(.*)",
+  "/api/ielts/(.*)",
   "/api/tts(.*)",
   "/report(.*)",
 ]);

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Mic, Square, BarChart2, BookOpen, Type, ToggleLeft, ToggleRight, Video, VideoOff, Languages, Printer } from "lucide-react";
+import { Mic, Square, BarChart2, BookOpen, Type, ToggleLeft, ToggleRight, Video, VideoOff, Languages, Printer, Maximize2, X } from "lucide-react";
 import Link from "next/link";
 import { saveRecording } from "@/lib/recordings";
 
@@ -194,6 +194,7 @@ export default function PracticePage() {
   const [notationOn, setNotationOn] = useState(true);
   const [phoneticOn, setPhoneticOn] = useState(false);
   const [webcamOn, setWebcamOn] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const secondsRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const videoStreamRef = useRef<MediaStream | null>(null);
@@ -387,14 +388,50 @@ export default function PracticePage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
+      {/* Full-screen reading overlay */}
+      {fullscreen && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-[#E0E0E0] shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-bold text-[#1F1F1F]">{activeScript?.scenario ?? "Your Script"}</span>
+              <div className="flex items-center gap-1 border border-[#E0E0E0] rounded overflow-hidden">
+                <span className="px-2 text-xs text-[#636363]"><Type size={12} /></span>
+                {(["sm","base","lg","xl"] as FontSize[]).map((s) => (
+                  <button key={s} onClick={() => setFontSize(s)}
+                    className={`px-2 py-1 text-xs font-semibold transition-colors ${fontSize === s ? "bg-[#0056D2] text-white" : "text-[#636363] hover:bg-[#F5F5F5]"}`}>
+                    {fontSizeLabel[s]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button onClick={() => setFullscreen(false)}
+              className="flex items-center gap-1.5 text-sm font-semibold text-[#636363] hover:text-[#E53935] transition-colors">
+              <X size={18} /> Exit full screen
+            </button>
+          </div>
+          <div className={`flex-1 overflow-y-auto px-6 sm:px-12 py-8 leading-relaxed ${fontSizeClass[fontSize]}`}>
+            <div className="max-w-3xl mx-auto">
+              {notationOn
+                ? phoneticOn
+                  ? <div className="whitespace-pre-wrap leading-relaxed">{addPhonetics(stripNotation(scriptContent))}</div>
+                  : renderNotation(scriptContent, fontSize)
+                : phoneticOn
+                  ? <div className="whitespace-pre-wrap text-[#1F1F1F] leading-relaxed">{addPhonetics(stripNotation(scriptContent))}</div>
+                  : <p className="whitespace-pre-wrap text-[#1F1F1F]">{stripNotation(scriptContent)}</p>
+              }
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         <h1 className="text-2xl font-bold text-[#1F1F1F]">Practice Recorder</h1>
         <p className="text-sm text-[#636363] mt-1">Record your delivery — AI analyzes pronunciation, fluency, confidence and more.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
-        {/* ─── Left / main pane ─── */}
-        <div className="lg:col-span-2 space-y-5">
+        {/* ─── Left / main pane (script) ─── */}
+        <div className="order-2 lg:order-1 lg:col-span-2 space-y-5">
 
       {/* Script Panel — full width, enlarged */}
       <div className="bg-white border border-[#E0E0E0] rounded-lg p-6">
@@ -450,6 +487,16 @@ export default function PracticePage() {
             {webcamOn ? <Video size={15} className="text-[#0056D2]" /> : <VideoOff size={15} />}
             <span>Webcam</span>
           </button>
+
+          {/* Fullscreen toggle */}
+          <button
+            onClick={() => setFullscreen(true)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-[#636363] hover:text-[#0056D2] transition-colors"
+            title="Full screen reading view"
+          >
+            <Maximize2 size={15} />
+            <span>Full screen</span>
+          </button>
         </div>
 
         {/* Script body — fits to content length */}
@@ -490,6 +537,11 @@ export default function PracticePage() {
         </div>
       </div>
 
+        </div>{/* ─── end left pane ─── */}
+
+        {/* ─── Right pane — camera preview + record controls, anchored at top ─── */}
+        <aside className="order-1 lg:order-2 lg:col-span-1 space-y-5 lg:sticky lg:top-4">
+
       {/* Webcam preview */}
       {webcamOn && (
         <div className="bg-white border border-[#E0E0E0] rounded-lg p-4 flex flex-col items-center gap-3">
@@ -502,16 +554,11 @@ export default function PracticePage() {
             autoPlay
             muted
             playsInline
-            className="rounded-lg w-full max-w-sm aspect-video bg-black object-cover"
+            className="rounded-lg w-full aspect-video bg-black object-cover"
           />
-          <p className="text-xs text-[#9E9E9E]">Practice eye contact and expressions while reading your script</p>
+          <p className="text-xs text-[#9E9E9E] text-center">Practice eye contact and expressions while reading your script</p>
         </div>
       )}
-
-        </div>{/* ─── end left pane ─── */}
-
-        {/* ─── Right pane sidebar ─── */}
-        <aside className="lg:col-span-1 space-y-5 lg:sticky lg:top-4">
 
       {/* Recording Panel — "Ready to record" frame */}
       <div className="bg-white border border-[#E0E0E0] rounded-lg p-6">
