@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Mic, Square, BarChart2, BookOpen, Type, ToggleLeft, ToggleRight, Video, VideoOff, Languages, Printer, Maximize2, X } from "lucide-react";
+import { Mic, Square, BarChart2, BookOpen, Type, ToggleLeft, ToggleRight, Video, VideoOff, Languages, Printer, Maximize2, X, Play, Pause, RotateCcw, ScrollText, Minus, Plus } from "lucide-react";
 import Link from "next/link";
 import { saveRecording } from "@/lib/recordings";
 
@@ -195,9 +195,43 @@ export default function PracticePage() {
   const [phoneticOn, setPhoneticOn] = useState(false);
   const [webcamOn, setWebcamOn] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [telePlaying, setTelePlaying] = useState(false);
+  const [teleSpeed, setTeleSpeed] = useState(1.4); // pixels per frame
+  const [teleMirror, setTeleMirror] = useState(false);
+  const teleScrollRef = useRef<HTMLDivElement | null>(null);
+  const teleRafRef = useRef<number | null>(null);
   const secondsRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const videoStreamRef = useRef<MediaStream | null>(null);
+
+  // Teleprompter auto-scroll loop
+  useEffect(() => {
+    if (!fullscreen || !telePlaying) return;
+    const step = () => {
+      const el = teleScrollRef.current;
+      if (el) {
+        el.scrollTop += teleSpeed;
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight - 1) {
+          setTelePlaying(false);
+          return;
+        }
+      }
+      teleRafRef.current = requestAnimationFrame(step);
+    };
+    teleRafRef.current = requestAnimationFrame(step);
+    return () => { if (teleRafRef.current) cancelAnimationFrame(teleRafRef.current); };
+  }, [fullscreen, telePlaying, teleSpeed]);
+
+  function openTeleprompter() {
+    setFullscreen(true);
+    setTelePlaying(false);
+    requestAnimationFrame(() => { if (teleScrollRef.current) teleScrollRef.current.scrollTop = 0; });
+  }
+
+  function restartTeleprompter() {
+    if (teleScrollRef.current) teleScrollRef.current.scrollTop = 0;
+    setTelePlaying(true);
+  }
 
   useEffect(() => {
     try {
@@ -388,11 +422,11 @@ export default function PracticePage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
-      {/* Full-screen reading overlay */}
+      {/* Full-screen reading / teleprompter overlay */}
       {fullscreen && (
         <div className="fixed inset-0 z-50 bg-white flex flex-col">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-[#E0E0E0] shrink-0">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-[#E0E0E0] shrink-0">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className="text-sm font-bold text-[#1F1F1F]">{activeScript?.scenario ?? "Your Script"}</span>
               <div className="flex items-center gap-1 border border-[#E0E0E0] rounded overflow-hidden">
                 <span className="px-2 text-xs text-[#636363]"><Type size={12} /></span>
@@ -404,23 +438,54 @@ export default function PracticePage() {
                 ))}
               </div>
             </div>
-            <button onClick={() => setFullscreen(false)}
-              className="flex items-center gap-1.5 text-sm font-semibold text-[#636363] hover:text-[#E53935] transition-colors">
-              <X size={18} /> Exit full screen
-            </button>
+
+            {/* Teleprompter controls */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button onClick={() => setTelePlaying((v) => !v)}
+                className="flex items-center gap-1.5 text-xs font-semibold bg-[#0056D2] hover:bg-[#003B8E] text-white px-3 py-1.5 rounded transition-colors"
+                title={telePlaying ? "Pause auto-scroll" : "Start auto-scroll"}>
+                {telePlaying ? <Pause size={14} /> : <Play size={14} />}
+                {telePlaying ? "Pause" : "Auto-scroll"}
+              </button>
+              <button onClick={restartTeleprompter} title="Restart from top"
+                className="p-1.5 rounded border border-[#E0E0E0] text-[#636363] hover:bg-[#F5F5F5] transition-colors">
+                <RotateCcw size={14} />
+              </button>
+              <div className="flex items-center gap-1 border border-[#E0E0E0] rounded">
+                <button onClick={() => setTeleSpeed((s) => Math.max(0.4, Math.round((s - 0.3) * 10) / 10))} className="px-1.5 py-1 text-[#636363] hover:bg-[#F5F5F5]" title="Slower"><Minus size={13} /></button>
+                <span className="text-[11px] font-semibold text-[#1F1F1F] w-12 text-center tabular-nums">{teleSpeed.toFixed(1)}×</span>
+                <button onClick={() => setTeleSpeed((s) => Math.min(6, Math.round((s + 0.3) * 10) / 10))} className="px-1.5 py-1 text-[#636363] hover:bg-[#F5F5F5]" title="Faster"><Plus size={13} /></button>
+              </div>
+              <button onClick={() => setTeleMirror((v) => !v)}
+                className={`text-xs font-semibold px-2.5 py-1.5 rounded border transition-colors ${teleMirror ? "border-[#0056D2] text-[#0056D2] bg-[#E8F1FF]" : "border-[#E0E0E0] text-[#636363] hover:bg-[#F5F5F5]"}`}
+                title="Mirror horizontally (for beam-splitter rigs)">
+                Mirror
+              </button>
+              <button onClick={() => { setFullscreen(false); setTelePlaying(false); }}
+                className="flex items-center gap-1.5 text-sm font-semibold text-[#636363] hover:text-[#E53935] transition-colors ml-1">
+                <X size={18} /> Exit
+              </button>
+            </div>
           </div>
-          <div className={`flex-1 overflow-y-auto px-6 sm:px-12 py-8 leading-relaxed ${fontSizeClass[fontSize]}`}>
+
+          <div ref={teleScrollRef} className={`flex-1 overflow-y-auto px-6 sm:px-12 py-8 leading-loose ${fontSizeClass[fontSize]}`}
+            style={teleMirror ? { transform: "scaleX(-1)" } : undefined}>
             <div className="max-w-3xl mx-auto">
               {notationOn
                 ? phoneticOn
-                  ? <div className="whitespace-pre-wrap leading-relaxed">{addPhonetics(stripNotation(scriptContent))}</div>
+                  ? <div className="whitespace-pre-wrap leading-loose">{addPhonetics(stripNotation(scriptContent))}</div>
                   : renderNotation(scriptContent, fontSize)
                 : phoneticOn
-                  ? <div className="whitespace-pre-wrap text-[#1F1F1F] leading-relaxed">{addPhonetics(stripNotation(scriptContent))}</div>
+                  ? <div className="whitespace-pre-wrap text-[#1F1F1F] leading-loose">{addPhonetics(stripNotation(scriptContent))}</div>
                   : <p className="whitespace-pre-wrap text-[#1F1F1F]">{stripNotation(scriptContent)}</p>
               }
+              {/* Tail space so the last lines can scroll into reading position */}
+              <div style={{ height: "40vh" }} />
             </div>
           </div>
+
+          {/* Reading guide line */}
+          <div className="pointer-events-none absolute left-0 right-0 top-1/3 h-px bg-[#0056D2]/20" />
         </div>
       )}
 
@@ -496,6 +561,16 @@ export default function PracticePage() {
           >
             <Maximize2 size={15} />
             <span>Full screen</span>
+          </button>
+
+          {/* Teleprompter */}
+          <button
+            onClick={openTeleprompter}
+            className="flex items-center gap-1.5 text-xs font-semibold text-[#636363] hover:text-[#0056D2] transition-colors"
+            title="Teleprompter — auto-scrolling full-screen reader"
+          >
+            <ScrollText size={15} />
+            <span>Teleprompter</span>
           </button>
         </div>
 
