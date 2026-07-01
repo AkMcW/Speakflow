@@ -2,8 +2,10 @@
 import { useState, useRef, useMemo } from "react";
 import {
   Volume2, Play, Pause, Download, Copy, CheckCircle, Loader2,
-  Repeat, ArrowRight, ArrowLeft, RotateCcw, Info,
+  Repeat, ArrowRight, ArrowLeft, RotateCcw, Info, Users, ChevronDown, X, Search,
 } from "lucide-react";
+
+interface VoiceOpt { id: string; name: string; category: string; description: string; previewUrl: string }
 
 function splitSentences(t: string): string[] {
   return t
@@ -17,6 +19,15 @@ export default function PracticeListenShadow({ text }: { text: string }) {
   const [voiceId, setVoiceId] = useState("");
   const [mode, setMode] = useState<"listen" | "shadow">("listen");
   const [err, setErr] = useState("");
+
+  // ElevenLabs "My Voices" picker (balloon)
+  const [voices, setVoices] = useState<VoiceOpt[] | null>(null);
+  const [voicesLoading, setVoicesLoading] = useState(false);
+  const [voicesConfigured, setVoicesConfigured] = useState(true);
+  const [voicesErr, setVoicesErr] = useState("");
+  const [showVoices, setShowVoices] = useState(false);
+  const [voiceSearch, setVoiceSearch] = useState("");
+  const previewRef = useRef<HTMLAudioElement | null>(null);
 
   // ── Listen ──
   const [audioB64, setAudioB64] = useState<string | null>(null);
@@ -48,9 +59,52 @@ export default function PracticeListenShadow({ text }: { text: string }) {
   function stopAll() {
     if (audioRef.current) audioRef.current.pause();
     if (shadowAudioRef.current) shadowAudioRef.current.pause();
+    if (previewRef.current) previewRef.current.pause();
     setPlaying(false);
     setShadowPlaying(false);
   }
+
+  async function loadVoices() {
+    setVoicesLoading(true);
+    setVoicesErr("");
+    try {
+      const res = await fetch("/api/tts/voices");
+      const data = await res.json();
+      setVoicesConfigured(!!data.configured);
+      setVoices(Array.isArray(data.voices) ? data.voices : []);
+      if (data.error) setVoicesErr(data.error);
+    } catch {
+      setVoicesErr("Failed to load voices.");
+      setVoices([]);
+    } finally {
+      setVoicesLoading(false);
+    }
+  }
+
+  function toggleVoices() {
+    const next = !showVoices;
+    setShowVoices(next);
+    if (next && voices === null && !voicesLoading) loadVoices();
+  }
+
+  function previewVoice(url: string) {
+    if (!url) return;
+    if (previewRef.current) previewRef.current.pause();
+    const audio = new Audio(url);
+    previewRef.current = audio;
+    audio.play().catch(() => {});
+  }
+
+  function selectVoice(v: VoiceOpt) {
+    setVoiceId(v.id);
+    setShowVoices(false);
+  }
+
+  const filteredVoices = (voices ?? []).filter((v) => {
+    const q = voiceSearch.trim().toLowerCase();
+    if (!q) return true;
+    return v.name.toLowerCase().includes(q) || v.description.toLowerCase().includes(q) || v.category.toLowerCase().includes(q);
+  });
 
   // ── Listen actions ──
   async function generateListen() {
@@ -158,16 +212,95 @@ export default function PracticeListenShadow({ text }: { text: string }) {
       </div>
 
       {/* Voice ID */}
-      <div className="mb-4">
+      <div className="mb-4 relative">
         <label className="block text-xs font-semibold text-[#636363] mb-1">
           ElevenLabs Voice ID <span className="font-normal">(optional — leave blank for the default voice)</span>
         </label>
-        <input
-          value={voiceId}
-          onChange={(e) => setVoiceId(e.target.value)}
-          placeholder="e.g. 21m00Tcm4TlvDq8ikWAM"
-          className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm text-[#1F1F1F] placeholder-[#9E9E9E] focus:outline-none focus:border-[#0056D2] focus:ring-1 focus:ring-[#0056D2]"
-        />
+        <div className="flex gap-2">
+          <input
+            value={voiceId}
+            onChange={(e) => setVoiceId(e.target.value)}
+            placeholder="e.g. 21m00Tcm4TlvDq8ikWAM"
+            className="flex-1 min-w-0 px-3 py-2 border border-[#E0E0E0] rounded text-sm text-[#1F1F1F] placeholder-[#9E9E9E] focus:outline-none focus:border-[#0056D2] focus:ring-1 focus:ring-[#0056D2]"
+          />
+          <button
+            onClick={toggleVoices}
+            className="flex items-center gap-1.5 border border-[#E0E0E0] text-[#636363] hover:bg-[#F5F5F5] font-semibold px-3 py-2 rounded text-sm transition-colors shrink-0"
+            title="Choose from your ElevenLabs voices"
+          >
+            <Users size={15} /> My Voices <ChevronDown size={13} className={`transition-transform ${showVoices ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+
+        {/* Voice picker balloon */}
+        {showVoices && (
+          <div className="absolute right-0 z-30 mt-2 w-full sm:w-96 bg-white border border-[#E0E0E0] rounded-xl shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#E0E0E0]">
+              <span className="text-sm font-bold text-[#1F1F1F]">Your ElevenLabs Voices</span>
+              <button onClick={() => setShowVoices(false)} className="text-[#9E9E9E] hover:text-[#E53935]"><X size={16} /></button>
+            </div>
+
+            {voicesConfigured && voices && voices.length > 0 && (
+              <div className="px-3 pt-2.5">
+                <div className="relative">
+                  <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9E9E9E]" />
+                  <input
+                    value={voiceSearch}
+                    onChange={(e) => setVoiceSearch(e.target.value)}
+                    placeholder="Search voices…"
+                    className="w-full pl-8 pr-3 py-1.5 border border-[#E0E0E0] rounded text-sm text-[#1F1F1F] placeholder-[#9E9E9E] focus:outline-none focus:border-[#0056D2]"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="max-h-72 overflow-y-auto p-2">
+              {voicesLoading && (
+                <div className="flex items-center gap-2 text-sm text-[#636363] px-2 py-6 justify-center">
+                  <Loader2 size={15} className="animate-spin text-[#0056D2]" /> Loading your voices…
+                </div>
+              )}
+
+              {!voicesLoading && !voicesConfigured && (
+                <div className="px-3 py-4 text-xs text-[#636363] leading-relaxed">
+                  ElevenLabs isn&apos;t connected on the server, so your voice library can&apos;t be listed. You can still paste a Voice ID manually, or the default voice will be used.
+                </div>
+              )}
+
+              {!voicesLoading && voicesConfigured && voicesErr && (
+                <div className="px-3 py-3 text-xs text-[#E53935]">{voicesErr}</div>
+              )}
+
+              {!voicesLoading && voicesConfigured && voices && voices.length === 0 && !voicesErr && (
+                <div className="px-3 py-4 text-xs text-[#636363]">No voices found in your ElevenLabs account.</div>
+              )}
+
+              {!voicesLoading && filteredVoices.map((v) => (
+                <div key={v.id}
+                  className={`flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-colors ${voiceId === v.id ? "bg-[#E8F1FF]" : "hover:bg-[#F5F5F5]"}`}
+                  onClick={() => selectVoice(v)}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-[#1F1F1F] truncate">{v.name}</span>
+                      {v.category && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#F0F0F0] text-[#636363] capitalize shrink-0">{v.category}</span>}
+                      {voiceId === v.id && <CheckCircle size={13} className="text-[#00B37D] shrink-0" />}
+                    </div>
+                    {v.description && <p className="text-[11px] text-[#9E9E9E] truncate">{v.description}</p>}
+                    <p className="text-[10px] text-[#B0B0B0] font-mono truncate">{v.id}</p>
+                  </div>
+                  {v.previewUrl && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); previewVoice(v.previewUrl); }}
+                      className="p-1.5 rounded-full text-[#0056D2] hover:bg-[#E8F1FF] shrink-0"
+                      title="Preview voice">
+                      <Play size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {err && (
