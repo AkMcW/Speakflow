@@ -51,17 +51,33 @@ const navSections: NavSection[] = [
   },
   {
     label: "Practice Modes",
-    items: [
-      { label: "IELTS Speaking", href: "/dashboard/ielts", icon: BookOpen, feature: "canUseIELTS" },
-      { label: "PTE Academic", href: "/dashboard/pte", icon: BookMarked, feature: "canUsePTE" },
-      { label: "Pitch Coach", href: "/dashboard/pitch", icon: Target, feature: "canUsePitchCoach" },
-      { label: "C2 Fluency Lab", href: "/dashboard/c2-fluency-lab", icon: GraduationCap, feature: "canUseC2Lab" },
-      { label: "Exam Speaking", href: "/dashboard/exam-speaking", icon: ClipboardCheck, feature: "canUseExamMode" },
-      { label: "Interview", href: "/dashboard/interview", icon: Briefcase, feature: "canUseInterview" },
-      { label: "Presentation", href: "/dashboard/presentation", icon: Monitor, feature: "canUsePresentation" },
-      { label: "Virtual Audience", href: "/dashboard/audience", icon: Users, feature: "canUseAudience" },
-      { label: "AI Coach", href: "/dashboard/ai-coach", icon: Bot, feature: null },
-      { label: "Challenges", href: "/dashboard/challenges", icon: Zap, feature: "canUseChallenges" },
+    items: [],
+    groups: [
+      {
+        label: "Global Exams", icon: GraduationCap,
+        items: [
+          { label: "IELTS Speaking", href: "/dashboard/ielts", icon: BookOpen, feature: "canUseIELTS" },
+          { label: "PTE Academic", href: "/dashboard/pte", icon: BookMarked, feature: "canUsePTE" },
+          { label: "C2 Fluency Lab", href: "/dashboard/c2-fluency-lab", icon: GraduationCap, feature: "canUseC2Lab" },
+          { label: "Exam Speaking", href: "/dashboard/exam-speaking", icon: ClipboardCheck, feature: "canUseExamMode" },
+        ],
+      },
+      {
+        label: "Challenge", icon: Zap,
+        items: [
+          { label: "Challenges", href: "/dashboard/challenges", icon: Zap, feature: "canUseChallenges" },
+          { label: "Pitch Coach", href: "/dashboard/pitch", icon: Target, feature: "canUsePitchCoach" },
+          { label: "Interview", href: "/dashboard/interview", icon: Briefcase, feature: "canUseInterview" },
+          { label: "Presentation", href: "/dashboard/presentation", icon: Monitor, feature: "canUsePresentation" },
+          { label: "Virtual Audience", href: "/dashboard/audience", icon: Users, feature: "canUseAudience" },
+        ],
+      },
+      {
+        label: "AI Coach", icon: Bot,
+        items: [
+          { label: "AI Coach", href: "/dashboard/ai-coach", icon: Bot, feature: null },
+        ],
+      },
     ],
   },
   {
@@ -86,7 +102,10 @@ export default function DashboardSidebar() {
   const email = user?.primaryEmailAddress?.emailAddress ?? "";
   const isAdmin = email === ADMIN_EMAIL;
   const planInfo = PLAN_FEATURES[isAdmin ? "admin" : "free"];
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ Script: true, Practice: true, Progress: true });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    Script: true, Practice: true, Progress: true,
+    "Global Exams": true, Challenge: true, "AI Coach": true,
+  });
   const toggleGroup = (label: string) => setOpenGroups((g) => ({ ...g, [label]: !g[label] }));
 
   function renderItem(
