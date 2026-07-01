@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Mic, Square, BarChart2, BookOpen, Type, ToggleLeft, ToggleRight, Video, VideoOff, Languages, Printer, Maximize2, X, Play, Pause, RotateCcw, ScrollText, Minus, Plus } from "lucide-react";
 import Link from "next/link";
 import { saveRecording } from "@/lib/recordings";
+import PracticeListenShadow from "@/components/PracticeListenShadow";
 
 const DEFAULT_SCRIPT = `Good morning, everyone. Thank you for joining today's Q3 project update.
 
@@ -611,6 +612,9 @@ export default function PracticePage() {
           )}
         </div>
       </div>
+
+      {/* Listen & Shadow — AI text-to-speech + sentence-by-sentence shadowing */}
+      <PracticeListenShadow text={stripNotation(scriptContent)} />
 
         </div>{/* ─── end left pane ─── */}
 

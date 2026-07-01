@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     if (!text || typeof text !== "string" || !text.trim()) {
       return NextResponse.json({ error: "Text is required." }, { status: 400 });
     }
-    const clean = text.slice(0, 1200); // guard against very long inputs
+    const clean = text.slice(0, 4000); // guard against very long inputs (OpenAI TTS max ~4096)
 
     let base64: string | null = null;
 
