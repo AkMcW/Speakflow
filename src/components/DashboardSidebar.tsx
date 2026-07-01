@@ -1,37 +1,52 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, FileText, Mic, BarChart2, BookOpen,
   Briefcase, Monitor, Users, Settings, CreditCard, Save, Target,
   Mic2, ShieldCheck, Bot, AudioLines, BookMarked, Zap,
-  ChevronLeft, ChevronRight, Library, Wand2, History, GraduationCap, ClipboardCheck,
+  ChevronLeft, ChevronRight, ChevronDown, Library, Wand2, History, GraduationCap, ClipboardCheck,
+  type LucideIcon,
 } from "lucide-react";
 import { useUser as useClerkUser } from "@clerk/nextjs";
 import { ADMIN_EMAIL, PLAN_FEATURES } from "@/lib/users";
 import { useSidebar } from "@/context/SidebarContext";
 
-const navSections = [
+type NavItem = { label: string; href: string; icon: LucideIcon; feature: string | null };
+type NavGroup = { label: string; icon: LucideIcon; items: NavItem[] };
+type NavSection = { label: string; items: NavItem[]; groups?: NavGroup[] };
+
+const navSections: NavSection[] = [
   {
     label: "Main",
     items: [
       { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, feature: null },
-      { label: "Script Writer", href: "/dashboard/script-writer", icon: FileText, feature: "canUseScriptWriter" },
-      { label: "Script Library", href: "/dashboard/script-library", icon: Library, feature: null },
-      { label: "Script Generator", href: "/dashboard/script-generator", icon: Wand2, feature: null },
-      { label: "Practice", href: "/dashboard/practice", icon: Mic, feature: "canUsePractice" },
-      { label: "Saved Scripts", href: "/dashboard/saved-scripts", icon: Save, feature: null },
-      { label: "Recordings", href: "/dashboard/records", icon: AudioLines, feature: null },
-      { label: "AI Coach", href: "/dashboard/ai-coach", icon: Bot, feature: null },
-      { label: "Challenges", href: "/dashboard/challenges", icon: Zap, feature: "canUseChallenges" },
-      { label: "Session Results", href: "/dashboard/session-results", icon: History, feature: null },
-      { label: "Progress", href: "/dashboard/progress", icon: BarChart2, feature: "canUseProgress" },
     ],
-  },
-  {
-    label: "Learn",
-    items: [
-      { label: "Phonetics", href: "/dashboard/phonetics", icon: BookMarked, feature: null },
+    groups: [
+      {
+        label: "Script", icon: FileText,
+        items: [
+          { label: "Script Writer", href: "/dashboard/script-writer", icon: FileText, feature: "canUseScriptWriter" },
+          { label: "Script Library", href: "/dashboard/script-library", icon: Library, feature: null },
+          { label: "Script Generator", href: "/dashboard/script-generator", icon: Wand2, feature: null },
+          { label: "Saved Scripts", href: "/dashboard/saved-scripts", icon: Save, feature: null },
+        ],
+      },
+      {
+        label: "Practice", icon: Mic,
+        items: [
+          { label: "Practice", href: "/dashboard/practice", icon: Mic, feature: "canUsePractice" },
+          { label: "Recordings", href: "/dashboard/records", icon: AudioLines, feature: null },
+        ],
+      },
+      {
+        label: "Progress", icon: BarChart2,
+        items: [
+          { label: "Session Results", href: "/dashboard/session-results", icon: History, feature: null },
+          { label: "Progress", href: "/dashboard/progress", icon: BarChart2, feature: "canUseProgress" },
+        ],
+      },
     ],
   },
   {
@@ -45,6 +60,8 @@ const navSections = [
       { label: "Interview", href: "/dashboard/interview", icon: Briefcase, feature: "canUseInterview" },
       { label: "Presentation", href: "/dashboard/presentation", icon: Monitor, feature: "canUsePresentation" },
       { label: "Virtual Audience", href: "/dashboard/audience", icon: Users, feature: "canUseAudience" },
+      { label: "AI Coach", href: "/dashboard/ai-coach", icon: Bot, feature: null },
+      { label: "Challenges", href: "/dashboard/challenges", icon: Zap, feature: "canUseChallenges" },
     ],
   },
   {
@@ -52,6 +69,12 @@ const navSections = [
     items: [
       { label: "Settings", href: "/dashboard/settings", icon: Settings, feature: null },
       { label: "Billing", href: "/dashboard/billing", icon: CreditCard, feature: null },
+    ],
+  },
+  {
+    label: "Learn",
+    items: [
+      { label: "Phonetics", href: "/dashboard/phonetics", icon: BookMarked, feature: null },
     ],
   },
 ];
@@ -63,6 +86,50 @@ export default function DashboardSidebar() {
   const email = user?.primaryEmailAddress?.emailAddress ?? "";
   const isAdmin = email === ADMIN_EMAIL;
   const planInfo = PLAN_FEATURES[isAdmin ? "admin" : "free"];
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ Script: true, Practice: true, Progress: true });
+  const toggleGroup = (label: string) => setOpenGroups((g) => ({ ...g, [label]: !g[label] }));
+
+  function renderItem(
+    item: { label: string; href: string; icon: LucideIcon; feature: string | null },
+    isCollapsed: boolean,
+    isMobile: boolean,
+  ) {
+    const active = pathname === item.href;
+    const Icon = item.icon;
+    const hasAccess = isAdmin || !item.feature || (planInfo as unknown as Record<string, boolean>)[item.feature];
+    return (
+      <li key={item.label}>
+        <Link
+          href={item.href}
+          title={isCollapsed ? item.label : undefined}
+          onClick={isMobile ? closeMobile : undefined}
+          className="flex items-center gap-2.5 rounded-lg text-sm font-medium transition-all duration-150 group relative"
+          style={{
+            padding: isCollapsed ? "8px 10px" : "7px 10px",
+            color: !hasAccess ? "var(--text-muted)" : active ? "var(--accent)" : "var(--text-secondary)",
+            background: active ? "var(--bg-active)" : "transparent",
+            fontWeight: active ? 600 : 500,
+          }}
+          onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "var(--bg-hover)"; }}
+          onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+        >
+          <Icon size={16} className="shrink-0" />
+          {!isCollapsed && <span className="truncate">{item.label}</span>}
+          {!isCollapsed && !hasAccess && (
+            <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ background: "var(--accent-bg)", color: "var(--accent)" }}>
+              Pro
+            </span>
+          )}
+          {isCollapsed && (
+            <span className="pointer-events-none absolute left-full ml-2 px-2 py-1 text-xs font-medium rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50"
+              style={{ background: "var(--bg-card)", color: "var(--text-primary)", border: "1px solid var(--border)", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+              {item.label}
+            </span>
+          )}
+        </Link>
+      </li>
+    );
+  }
 
   function SidebarInner({ isMobile = false }: { isMobile?: boolean }) {
     const show = !isMobile; // show labels and plan badge always on mobile
@@ -116,44 +183,42 @@ export default function DashboardSidebar() {
               )}
               {isCollapsed && <div className="w-full h-px mb-3" style={{ background: "var(--border)" }} />}
               <ul className="space-y-0.5">
-                {section.items.map((item) => {
-                  const active = pathname === item.href;
-                  const Icon = item.icon;
-                  const hasAccess = isAdmin || !item.feature || (planInfo as unknown as Record<string, boolean>)[item.feature];
-                  return (
-                    <li key={item.label}>
-                      <Link
-                        href={item.href}
-                        title={isCollapsed ? item.label : undefined}
-                        onClick={isMobile ? closeMobile : undefined}
-                        className="flex items-center gap-2.5 rounded-lg text-sm font-medium transition-all duration-150 group relative"
-                        style={{
-                          padding: isCollapsed ? "8px 10px" : "7px 10px",
-                          color: !hasAccess ? "var(--text-muted)" : active ? "var(--accent)" : "var(--text-secondary)",
-                          background: active ? "var(--bg-active)" : "transparent",
-                          fontWeight: active ? 600 : 500,
-                        }}
-                        onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "var(--bg-hover)"; }}
-                        onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                      >
-                        <Icon size={16} className="shrink-0" />
-                        {!isCollapsed && <span className="truncate">{item.label}</span>}
-                        {!isCollapsed && !hasAccess && (
-                          <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ background: "var(--accent-bg)", color: "var(--accent)" }}>
-                            Pro
-                          </span>
-                        )}
-                        {isCollapsed && (
-                          <span className="pointer-events-none absolute left-full ml-2 px-2 py-1 text-xs font-medium rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50"
-                            style={{ background: "var(--bg-card)", color: "var(--text-primary)", border: "1px solid var(--border)", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
-                            {item.label}
-                          </span>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
+                {section.items.map((item) => renderItem(item, isCollapsed, isMobile))}
               </ul>
+
+              {/* Collapsible submenus */}
+              {section.groups?.map((grp) => {
+                const GrpIcon = grp.icon;
+                const open = openGroups[grp.label] ?? true;
+                if (isCollapsed) {
+                  // In the narrow rail, show group items flat (icon-only)
+                  return (
+                    <ul key={grp.label} className="space-y-0.5 mt-0.5">
+                      {grp.items.map((item) => renderItem(item, isCollapsed, isMobile))}
+                    </ul>
+                  );
+                }
+                return (
+                  <div key={grp.label} className="mt-1">
+                    <button
+                      onClick={() => toggleGroup(grp.label)}
+                      className="w-full flex items-center gap-2.5 rounded-lg text-sm font-semibold transition-all duration-150"
+                      style={{ padding: "7px 10px", color: "var(--text-primary)" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-hover)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                    >
+                      <GrpIcon size={16} className="shrink-0" />
+                      <span className="truncate flex-1 text-left">{grp.label}</span>
+                      <ChevronDown size={14} className="shrink-0 transition-transform" style={{ transform: open ? "none" : "rotate(-90deg)", color: "var(--text-muted)" }} />
+                    </button>
+                    {open && (
+                      <ul className="space-y-0.5 mt-0.5 ml-3 pl-2 border-l" style={{ borderColor: "var(--border)" }}>
+                        {grp.items.map((item) => renderItem(item, isCollapsed, isMobile))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ))}
         </nav>
