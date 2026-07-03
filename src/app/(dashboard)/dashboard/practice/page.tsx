@@ -201,6 +201,7 @@ export default function PracticePage() {
   const [teleMirror, setTeleMirror] = useState(false);
   const teleScrollRef = useRef<HTMLDivElement | null>(null);
   const teleRafRef = useRef<number | null>(null);
+  const teleAccRef = useRef(0); // accumulates sub-pixel scroll so slow speeds still move
   const secondsRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const videoStreamRef = useRef<MediaStream | null>(null);
@@ -211,7 +212,14 @@ export default function PracticePage() {
     const step = () => {
       const el = teleScrollRef.current;
       if (el) {
-        el.scrollTop += teleSpeed;
+        // scrollTop rounds to whole pixels, so add up fractional speed and
+        // only apply the integer part — otherwise speeds under ~1px/frame never move.
+        teleAccRef.current += teleSpeed;
+        const whole = Math.floor(teleAccRef.current);
+        if (whole >= 1) {
+          el.scrollTop += whole;
+          teleAccRef.current -= whole;
+        }
         if (el.scrollTop + el.clientHeight >= el.scrollHeight - 1) {
           setTelePlaying(false);
           return;
@@ -226,10 +234,12 @@ export default function PracticePage() {
   function openTeleprompter() {
     setFullscreen(true);
     setTelePlaying(false);
+    teleAccRef.current = 0;
     requestAnimationFrame(() => { if (teleScrollRef.current) teleScrollRef.current.scrollTop = 0; });
   }
 
   function restartTeleprompter() {
+    teleAccRef.current = 0;
     if (teleScrollRef.current) teleScrollRef.current.scrollTop = 0;
     setTelePlaying(true);
   }
