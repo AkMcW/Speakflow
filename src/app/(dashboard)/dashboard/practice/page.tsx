@@ -453,9 +453,9 @@ export default function PracticePage() {
                 <RotateCcw size={14} />
               </button>
               <div className="flex items-center gap-1 border border-[#E0E0E0] rounded">
-                <button onClick={() => setTeleSpeed((s) => Math.max(0.4, Math.round((s - 0.3) * 10) / 10))} className="px-1.5 py-1 text-[#636363] hover:bg-[#F5F5F5]" title="Slower"><Minus size={13} /></button>
+                <button onClick={() => setTeleSpeed((s) => Math.max(0.1, Math.round((s - 0.1) * 10) / 10))} className="px-1.5 py-1 text-[#636363] hover:bg-[#F5F5F5]" title="Slower"><Minus size={13} /></button>
                 <span className="text-[11px] font-semibold text-[#1F1F1F] w-12 text-center tabular-nums">{teleSpeed.toFixed(1)}×</span>
-                <button onClick={() => setTeleSpeed((s) => Math.min(6, Math.round((s + 0.3) * 10) / 10))} className="px-1.5 py-1 text-[#636363] hover:bg-[#F5F5F5]" title="Faster"><Plus size={13} /></button>
+                <button onClick={() => setTeleSpeed((s) => Math.min(6, Math.round((s + 0.1) * 10) / 10))} className="px-1.5 py-1 text-[#636363] hover:bg-[#F5F5F5]" title="Faster"><Plus size={13} /></button>
               </div>
               <button onClick={() => setTeleMirror((v) => !v)}
                 className={`text-xs font-semibold px-2.5 py-1.5 rounded border transition-colors ${teleMirror ? "border-[#0056D2] text-[#0056D2] bg-[#E8F1FF]" : "border-[#E0E0E0] text-[#636363] hover:bg-[#F5F5F5]"}`}

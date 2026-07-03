@@ -91,6 +91,7 @@ const navSections: NavSection[] = [
     label: "Learn",
     items: [
       { label: "Phonetics", href: "/dashboard/phonetics", icon: BookMarked, feature: null },
+      { label: "Vocabulary", href: "/dashboard/vocabulary", icon: Library, feature: null },
     ],
   },
 ];
