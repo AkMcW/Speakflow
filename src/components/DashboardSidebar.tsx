@@ -7,7 +7,7 @@ import {
   Briefcase, Monitor, Users, Settings, CreditCard, Save, Target,
   Mic2, ShieldCheck, Bot, AudioLines, BookMarked, Zap,
   ChevronLeft, ChevronRight, ChevronDown, Library, Wand2, History, GraduationCap, ClipboardCheck,
-  type LucideIcon,
+  Landmark, type LucideIcon,
 } from "lucide-react";
 import { useUser as useClerkUser } from "@clerk/nextjs";
 import { ADMIN_EMAIL, PLAN_FEATURES } from "@/lib/users";
@@ -92,6 +92,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "Phonetics", href: "/dashboard/phonetics", icon: BookMarked, feature: null },
       { label: "Vocabulary", href: "/dashboard/vocabulary", icon: Library, feature: null },
+      { label: "Outstanding Speeches", href: "/dashboard/speeches", icon: Landmark, feature: null },
     ],
   },
 ];
