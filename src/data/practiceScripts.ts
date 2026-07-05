@@ -1,7 +1,7 @@
 export interface PracticeScript {
   id: string;
   title: string;
-  category: "business" | "interview" | "ielts" | "sales" | "leadership" | "tech" | "story" | "public";
+  category: "business" | "interview" | "ielts" | "sales" | "leadership" | "tech" | "story" | "public" | "motivation";
   difficulty: "beginner" | "intermediate" | "advanced";
   tags: string[];
   description: string;
@@ -1492,5 +1492,491 @@ The technology itself is largely neutral. // The algorithms that recommend conte
 [SLOW] And the reason I'm standing here / is that I believe / it is still a solvable one — / if we're willing to ask the right question. ///
 
 Let me show you what that solution could look like. /`
+  },
+
+  // ─── MOTIVATION (30) ─────────────────────────────────────────────────────────
+
+  {
+    id: "mot-01",
+    title: "Start Before You're Ready",
+    category: "motivation",
+    difficulty: "beginner",
+    tags: ["starting", "action", "courage"],
+    description: "An encouraging push to stop waiting for the perfect moment and begin now.",
+    content:
+      `[STRONG] Here's the truth nobody tells you: // you will **never** feel completely ready. ///
+The perfect moment / the perfect plan / the perfect version of you — / they're not coming. //
+[SLOW] What you have / is **today**. // And today is enough. //
+Every person you admire / started exactly where you are — / uncertain, / unprepared, / a little afraid. // The only difference / is that they **began anyway**. ///
+[SMILE] So take the first step. / Not the whole staircase — / just the **first step**. //
+You don't need permission. / You don't need a guarantee. // You just need to **start**. ///
+[STRONG] Start messy. / Start scared. / Start small. // But **start**. ///`
+  },
+  {
+    id: "mot-02",
+    title: "The Comeback Is Always Stronger",
+    category: "motivation",
+    difficulty: "beginner",
+    tags: ["resilience", "comeback", "failure"],
+    description: "A reminder that setbacks are setups for something greater.",
+    content:
+      `[SLOW] So you fell down. // Maybe hard. // Maybe in front of everyone. ///
+Let me tell you something about falling: // it is **not** the end of your story. / It's the middle. ///
+[STRONG] Every comeback / begins with a setback. // Every hero you've ever cheered for / had a moment where it looked like they were finished. //
+And then — / they **got back up**. ///
+[SLOW] That's the part people remember. // Not the fall. / The **rise**. //
+[SMILE] So wipe the dust off. / Breathe. / And decide — / right now — / that this chapter / does **not** get to be your last. ///
+[STRONG] The comeback / is always **stronger** / than the setback. // Always. ///`
+  },
+  {
+    id: "mot-03",
+    title: "You Are Capable of More Than You Think",
+    category: "motivation",
+    difficulty: "beginner",
+    tags: ["self-belief", "potential", "confidence"],
+    description: "A confidence-building message about untapped potential.",
+    content:
+      `[STRONG] Look at how far you've already come. ///
+[SLOW] Think about the version of you / from five years ago. // The things that terrified you then / you handle **without thinking** today. //
+That's not luck. / That's **growth**. ///
+[STRONG] You have survived / **one hundred percent** / of your hardest days. // Every single one. //
+So the challenge in front of you right now? // [SMILE] You are more ready for it / than you feel. ///
+[SLOW] The doubt in your head / is not the truth. // It's just a habit. // And habits / can be **broken**. ///
+[STRONG] You are capable / of far more / than you think. // Now go **prove it** — / to **yourself**. ///`
+  },
+  {
+    id: "mot-04",
+    title: "One Small Step Every Day",
+    category: "motivation",
+    difficulty: "beginner",
+    tags: ["consistency", "habits", "progress"],
+    description: "Celebrating the quiet power of small, consistent action.",
+    content:
+      `[SLOW] Forget the giant leap. // Forget the overnight success. ///
+Real change / doesn't happen in a moment. // It happens in **momentum**. //
+[STRONG] One small step / every single day. // That's the whole secret. ///
+[SLOW] A page a day / becomes a book. // A word a day / becomes a language. // A workout a day / becomes a **new body**, / a new **life**. //
+It feels slow. / I know. // [SMILE] But slow / and **steady** / beats fast / and **quit** — / every time. ///
+[STRONG] So don't ask, / "How do I change my whole life?" // Ask, / "What's **one** thing I can do **today**?" ///
+And then — / do it again tomorrow. ///`
+  },
+  {
+    id: "mot-05",
+    title: "Your Only Competition Is Yesterday",
+    category: "motivation",
+    difficulty: "beginner",
+    tags: ["comparison", "growth", "focus"],
+    description: "Letting go of comparison and racing only against your past self.",
+    content:
+      `[STRONG] Stop looking sideways. ///
+[SLOW] Comparison / is a thief. // It steals your joy / and hands you someone else's highlight reel / in return. //
+You are not behind. // You are not too late. // You are simply / on **your** path. ///
+[STRONG] The only person / you need to beat / is the person you were **yesterday**. //
+[SMILE] A little braver. / A little kinder. / A little better. // That's it. ///
+[SLOW] Someone else's success / does not dim your light. // There is **more** than enough room / for you to shine too. ///
+[STRONG] Run your **own** race. // Keep your eyes / on your **own** lane. // And measure yourself / against **yesterday** — / never against anyone else. ///`
+  },
+  {
+    id: "mot-06",
+    title: "Fear Is a Compass, Not a Wall",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["fear", "courage", "growth"],
+    description: "Reframing fear as a signpost pointing toward growth.",
+    content:
+      `[SLOW] Let's talk about fear. ///
+Most people treat fear / like a **stop sign**. // A wall. / A reason to turn back. //
+[STRONG] But what if / fear is actually a **compass**? ///
+[SLOW] Think about it. // The things that scare you most / are almost always / the things that would **grow** you most. // The conversation you're avoiding. / The dream you won't say out loud. / The leap you keep postponing. //
+[SMILE] Fear isn't there to stop you. // It's there to show you / **where the growth is**. ///
+[STRONG] So the next time your heart races / and your hands shake — / don't run. // **Lean in**. ///
+That feeling / is not danger. // It's your future / trying to get your attention. ///`
+  },
+  {
+    id: "mot-07",
+    title: "Discipline Is Self-Respect",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["discipline", "habits", "self-respect"],
+    description: "Reframing discipline as an act of love for your future self.",
+    content:
+      `[STRONG] People think discipline / is punishment. // It isn't. ///
+[SLOW] Discipline / is **self-respect**. // It's you / keeping a promise / to **yourself**. //
+Every time you do the hard thing / when you don't feel like it — / you're telling yourself: // "I matter. / My goals matter. / My future matters." ///
+[STRONG] Motivation / is a **feeling**. // It comes and goes. // But discipline / is a **decision**. // And decisions / don't need to wait for a good mood. ///
+[SMILE] You won't always feel inspired. // That's fine. // Show up **anyway**. ///
+[SLOW] Because the person you want to become / is built / in the moments / you'd rather quit — / and you **don't**. ///
+[STRONG] Discipline / is love / for your future self. ///`
+  },
+  {
+    id: "mot-08",
+    title: "Rise After the Fall",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["resilience", "persistence", "hope"],
+    description: "A rousing call to get up one more time than you fall.",
+    content:
+      `[SLOW] They will count you out. ///
+When you stumble, / when you fail, / when you fall flat on your face / — / the world will whisper: // "That's it. / They're done." ///
+[STRONG] Prove them **wrong**. ///
+[SLOW] Success / is not about never falling. // It's about how **quickly** / you get back up. // It's about falling **seven** times / and standing up **eight**. ///
+[SMILE] Your scars / are not signs of weakness. // They're proof / that you **fought** / and you **survived**. ///
+[STRONG] So get up. // Not because it's easy — / it isn't. // But because you are **not** the kind of person / who stays down. ///
+[STRONG] Rise. // Again. // And **again**. // As many times / as it takes. ///`
+  },
+  {
+    id: "mot-09",
+    title: "Dream Bigger Than Your Doubt",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["dreams", "ambition", "belief"],
+    description: "Encouragement to let your dreams outgrow your fears.",
+    content:
+      `[STRONG] What would you attempt / if you knew / you could not fail? ///
+[SLOW] Sit with that question. // Because somewhere inside you / there's a dream / you've been keeping **small** — / just to keep it **safe**. //
+[STRONG] Stop shrinking it. ///
+[SLOW] Your dream / was never meant to fit / inside your comfort zone. // It's supposed to scare you / a little. // That's how you know / it's **big enough**. //
+[SMILE] Yes, / people will doubt you. // Sometimes / the loudest doubter / lives inside your own head. //
+[STRONG] Dream **bigger** / than that doubt. ///
+[SLOW] Because the world / is not changed / by people who played it safe. // It's changed / by people / who dared to want **more**. ///
+So dare. ///`
+  },
+  {
+    id: "mot-10",
+    title: "This Is Your Moment",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["seizing the moment", "action", "urgency"],
+    description: "A high-energy reminder that the time is now.",
+    content:
+      `[STRONG] Not next year. / Not next month. / Not "someday." // **Now**. ///
+[SLOW] You keep waiting / for the right time. // Let me save you some years: // the right time / is a **myth**. // There is only / **this** time. ///
+[STRONG] This moment / — right here — / is the youngest you will ever be again. // The most energy. / The most runway. / The most **chance**. ///
+[SMILE] So what are you waiting for? ///
+[SLOW] The people who change their lives / are not smarter than you. / They're not luckier than you. // They just stopped **waiting**. //
+[STRONG] This / is your moment. // Not a rehearsal. / Not a warm-up. // The **real thing**. ///
+Grab it / with both hands / — / and **do not let go**. ///`
+  },
+  {
+    id: "mot-11",
+    title: "You Were Made for Hard Things",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["resilience", "strength", "challenge"],
+    description: "A reminder that difficulty reveals strength you already have.",
+    content:
+      `[SLOW] When life gets heavy, / you don't need lighter problems. // You need **stronger shoulders**. ///
+[STRONG] And here's the good news: // you've been building them / your whole life. ///
+[SLOW] Every hard thing / you've already survived / made you **more capable**, / not less. // You are not fragile. // You are **forged**. //
+[SMILE] Difficulty / is not a sign / you're on the wrong path. // Sometimes / it's proof / you're doing something / that **matters**. ///
+[STRONG] So when the challenge comes — / and it will — / don't ask, / "Why me?" // Ask, / "**Watch me**." ///
+[SLOW] You were not made / for a small, / easy, / comfortable life. // You were made / for **hard things**. ///
+And hard things / make **great people**. ///`
+  },
+  {
+    id: "mot-12",
+    title: "Keep Going When It Gets Quiet",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["persistence", "patience", "consistency"],
+    description: "Encouragement for the unglamorous middle of the journey.",
+    content:
+      `[SLOW] Everyone loves the **start**. // The excitement. / The fresh energy. // And everyone loves the **finish**. // The celebration. / The applause. ///
+[STRONG] But the middle? // The middle is **quiet**. ///
+[SLOW] The middle / is where no one is watching. / Where the results haven't shown up yet. / Where it feels / like nothing is working. //
+[STRONG] The middle / is where most people **quit**. ///
+[SMILE] Don't. ///
+[SLOW] Because everything you want / is being built / in that quiet, / boring, / unglamorous middle. // The progress is **invisible** — / right up until / it's **undeniable**. //
+[STRONG] So keep going / when it gets quiet. // Keep going / when no one claps. // Keep going / when **you** are the only one / who still believes. ///
+That's when it counts most. ///`
+  },
+  {
+    id: "mot-13",
+    title: "Turn the Pain into Power",
+    category: "motivation",
+    difficulty: "advanced",
+    tags: ["resilience", "purpose", "transformation"],
+    description: "Channeling hardship into fuel and meaning.",
+    content:
+      `[SLOW] I won't insult you / by pretending / it didn't hurt. ///
+It did. // Maybe it still does. ///
+[STRONG] But pain / is raw material. // And **you** / get to decide / what you build with it. ///
+[SLOW] You can let it make you / **bitter**. // Or you can let it make you / **better**. // Same fire — / two very different outcomes. //
+[SMILE] The most powerful people I've ever met / were not the ones / life went easy on. // They were the ones / who took the worst thing / that ever happened to them / and turned it into **fuel**. ///
+[STRONG] Your pain / is not proof / that you're broken. // It's proof / that you can **feel deeply** — / and people who feel deeply / can **change** things. ///
+[SLOW] So take the pain. // And turn it / into **power**. ///`
+  },
+  {
+    id: "mot-14",
+    title: "Believe It Before You See It",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["belief", "vision", "mindset"],
+    description: "Why belief has to come first, before the proof arrives.",
+    content:
+      `[STRONG] "I'll believe it / when I see it." ///
+[SLOW] We've all said it. // But it's **backwards**. ///
+Nothing great / was ever seen first / and believed second. // The bridge, / the rocket, / the cure, / the business — / someone **believed** in it / long before / there was anything to see. ///
+[STRONG] Belief / comes **first**. // The proof / comes **later**. ///
+[SMILE] So if you're waiting / for evidence / that you'll succeed / before you'll commit — / you'll wait **forever**. //
+[SLOW] You have to see it / in your mind / before you'll see it / in your life. // You have to back yourself / **before** the results / give you permission. ///
+[STRONG] Believe it / **first**. // Build it **second**. // And one day / you'll look up / and finally — / **see it**. ///`
+  },
+  {
+    id: "mot-15",
+    title: "Your Setback Has a Purpose",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["purpose", "resilience", "perspective"],
+    description: "Finding meaning and redirection inside disappointment.",
+    content:
+      `[SLOW] The door closed. // The plan collapsed. // The "no" came / when you needed a "yes." ///
+[STRONG] I know it feels / like the end. // But what if / it's a **redirection**? ///
+[SLOW] Sometimes / what looks like rejection / is really **protection**. // Sometimes / the thing that didn't work out / was clearing space / for something / you couldn't even imagine yet. //
+[SMILE] You can't always see it / in the moment. // But look back / at your own life. // How many times / did a disappointment / turn out / to be a **gift** in disguise? ///
+[STRONG] This setback / is not random. // It's shaping you. / Sharpening you. / Pointing you / somewhere **better**. ///
+[SLOW] Trust the detour. // Your story / is still being written — / and this / is not the final page. ///`
+  },
+  {
+    id: "mot-16",
+    title: "Show Up as Your Future Self",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["identity", "growth", "habits"],
+    description: "Becoming the person you want to be by acting like them now.",
+    content:
+      `[STRONG] Stop waiting / to **become** / the person you want to be. // Start **acting** like them / today. ///
+[SLOW] Ask yourself / one simple question: // "What would / the strongest, / wisest, / most confident version of me / do right now?" //
+And then — / [SMILE] do **that**. ///
+[STRONG] You don't change your life / and then change your identity. // It works the **other way**. // You change your **identity** / and your life / follows. ///
+[SLOW] Every choice you make / is a vote / for who you're becoming. // Every workout, / every kind word, / every time you show up — / you're casting a vote / for your **future self**. //
+[STRONG] So show up / as that person / today. // Not perfectly. // Just **intentionally**. ///
+The future / is not somewhere you go. // It's someone you **become**. ///`
+  },
+  {
+    id: "mot-17",
+    title: "Gratitude Changes Everything",
+    category: "motivation",
+    difficulty: "beginner",
+    tags: ["gratitude", "perspective", "positivity"],
+    description: "How a shift toward gratitude transforms your whole outlook.",
+    content:
+      `[SLOW] Same day. // Same life. // Two completely different experiences. ///
+The only difference? // **Where you point your attention**. ///
+[STRONG] Gratitude / is not pretending / everything is perfect. // It's choosing to notice / what's **good** / even when it isn't. ///
+[SLOW] The breath in your lungs. / The people who love you. / The roof, / the meal, / the second chance / you almost didn't get. //
+[SMILE] We chase / what we don't have / so hard / that we forget to enjoy / everything we **do**. ///
+[STRONG] So try this: // right now, / name **three** things / you're grateful for. // Really feel them. ///
+[SLOW] It sounds small. // But gratitude / rewires the brain. // It turns / "not enough" / into "**enough**." // And "enough" / is where / peace / begins. ///`
+  },
+  {
+    id: "mot-18",
+    title: "The Mountain You Climb for Others",
+    category: "motivation",
+    difficulty: "advanced",
+    tags: ["purpose", "service", "legacy"],
+    description: "Finding strength by connecting your struggle to a bigger why.",
+    content:
+      `[SLOW] When the climb gets brutal / and you want to quit — / stop asking / "**why** am I doing this?" ///
+[STRONG] Ask / "**who** am I doing this for?" ///
+[SLOW] Because motivation / that starts and ends / with you / runs out fast. // But a reason / bigger than yourself? // That / is a fuel / that doesn't quit. //
+[SMILE] The family / you're building a better life for. / The people / who will walk the path / you're clearing. / The younger version of you / who needed / exactly what you're about to create. ///
+[STRONG] Your struggle / has an **audience** — / even if you can't see them yet. ///
+[SLOW] So climb. // Not just for the view. // Climb / because someone / is watching to see / if it can be **done**. ///
+And you / are about to show them / that it **can**. ///`
+  },
+  {
+    id: "mot-19",
+    title: "Progress Over Perfection",
+    category: "motivation",
+    difficulty: "beginner",
+    tags: ["perfectionism", "progress", "action"],
+    description: "Freeing yourself from perfectionism to keep moving forward.",
+    content:
+      `[STRONG] Perfectionism / is not a badge of honor. // It's **fear** / in a nice outfit. ///
+[SLOW] Waiting until it's perfect / is just a polite way / of saying / "I'm too scared / to let anyone see it yet." //
+[STRONG] Let it go. ///
+[SLOW] Done / is better than perfect. // A messy step forward / beats a flawless plan / that never leaves your head. //
+[SMILE] You will improve / by **doing** — / not by waiting. // The masterpiece / comes from the practice, / and the practice / is always / a little ugly / at first. ///
+[STRONG] So aim for **progress**, / not perfection. // Ship it imperfect. / Learn. / Adjust. / Go again. ///
+[SLOW] Because a thousand imperfect steps / will take you somewhere. // And perfect / — perfect / never moves / at all. ///`
+  },
+  {
+    id: "mot-20",
+    title: "You Are Not Behind",
+    category: "motivation",
+    difficulty: "beginner",
+    tags: ["self-compassion", "timing", "comparison"],
+    description: "Reassurance for anyone who feels like they're running late in life.",
+    content:
+      `[SLOW] There is no schedule / you are failing. ///
+[STRONG] Nobody / handed you a timeline / at birth / that says / by **this** age / you must have / **all** of it figured out. ///
+[SLOW] Some flowers / bloom in spring. // Some / bloom in **fall**. // Neither / is late. // Both / are exactly / on time. //
+[SMILE] Your path / is not slower. // It's just **yours**. ///
+[STRONG] Stop measuring your life / against someone else's clock. // The person you compare yourself to / has struggles / you can't see / and a pace / that isn't yours. ///
+[SLOW] You are not behind. // You are not too late. // You are **right on time** / for the life / that's meant for you. ///
+Breathe. // Keep going. // Your season / is **coming**. ///`
+  },
+  {
+    id: "mot-21",
+    title: "Courage Is a Choice",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["courage", "fear", "action"],
+    description: "Understanding courage as action taken despite fear, not the absence of it.",
+    content:
+      `[STRONG] Courage / is not the absence of fear. ///
+[SLOW] The brave / feel afraid / too. // Their hearts pound. / Their hands shake. / Their minds scream / "turn back." //
+The difference / is what they do **next**. ///
+[STRONG] Courage / is feeling all of that / — / and stepping forward / **anyway**. ///
+[SMILE] It's not a personality trait / you're either born with / or without. // It's a **choice**. // A choice / you get to make / again / and again. ///
+[SLOW] Every time you speak up / when it's easier to stay silent — / that's courage. // Every time you try / when you might fail — / that's courage. // Every time you keep a promise / to yourself — / that's courage. ///
+[STRONG] So today, / when fear shows up — / and it will — / choose courage. // Just / **one** brave choice. // Then another. ///`
+  },
+  {
+    id: "mot-22",
+    title: "Water the Seeds You've Planted",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["patience", "consistency", "growth"],
+    description: "A patient reminder that unseen effort is still working.",
+    content:
+      `[SLOW] You planted the seed. // You watered it. // And then / you stared at the dirt / and thought: // "Nothing's happening." ///
+[STRONG] But underground, / where you can't see — / **everything** is happening. ///
+[SLOW] The roots / are spreading. // The foundation / is forming. // The growth / is real — / it's just / not **visible** / yet. //
+[SMILE] That's how it works / for you, too. // The effort you put in / that seems to lead nowhere / is building something / beneath the surface. ///
+[STRONG] Don't dig up the seed / to check on it. // Don't quit / one week / before the breakthrough. ///
+[SLOW] Keep watering. // Keep showing up. // Trust / that unseen / does not mean / **unmoving**. //
+[STRONG] The harvest / is coming. // Just / keep / **watering**. ///`
+  },
+  {
+    id: "mot-23",
+    title: "Silence the Inner Critic",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["self-talk", "confidence", "mindset"],
+    description: "Learning to challenge the harsh voice in your own head.",
+    content:
+      `[SLOW] There's a voice in your head. // And sometimes / it is **cruel**. ///
+It says: / "You're not good enough. / You'll fail. / Who do you think you are?" ///
+[STRONG] Here's what you need to know: // that voice / is **not** telling the truth. // It's telling you a **habit**. ///
+[SLOW] You would never / speak to a friend / the way / you speak to yourself. // So why / accept it / from your own mind? //
+[SMILE] The next time / that critic speaks up, / ask it one question: // "Is that a **fact** — / or just a **fear**?" ///
+[STRONG] Almost always, / it's fear. // And fear / does not get the final word. ///
+[SLOW] Replace / "I can't" / with "I'm learning." // Replace / "What if I fail?" / with "What if I **don't**?" //
+Talk to yourself / like someone / you're **rooting for**. ///`
+  },
+  {
+    id: "mot-24",
+    title: "The Power of One More",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["persistence", "discipline", "grit"],
+    description: "How the willingness to do one more builds greatness.",
+    content:
+      `[STRONG] One more rep. // One more call. // One more try / when everything in you / says **stop**. ///
+[SLOW] That's where greatness lives. // Not in the first effort / that everyone gives — / but in the **one more** / that almost nobody does. ///
+[STRONG] When your competition quits, / you do **one more**. // When you're tired, / you do **one more**. // When it would be so easy / to walk away, / you do — / **one / more**. ///
+[SMILE] It sounds small. // But those "one mores" / stack up / into a life / most people / only dream about. ///
+[SLOW] The gap / between average / and extraordinary / is not talent. // It's the willingness / to do / what others won't / — / just / **one more time**. ///
+[STRONG] So don't stop / at your limit. // Take / **one more** / step past it. // That's / where you **grow**. ///`
+  },
+  {
+    id: "mot-25",
+    title: "Choose Growth Over Comfort",
+    category: "motivation",
+    difficulty: "advanced",
+    tags: ["growth mindset", "comfort zone", "change"],
+    description: "A challenge to trade the comfort zone for the growth zone.",
+    content:
+      `[SLOW] Comfort / is a beautiful place. // But nothing / ever **grows** there. ///
+[STRONG] Everything you want / — the confidence, / the skill, / the life — / is on the **other side** / of the comfort zone. ///
+[SLOW] And getting there / requires something / most people avoid: // the willingness / to be **bad** at something / before you're good at it. // To be uncomfortable / on purpose. //
+[SMILE] Yes, / it's awkward. // Yes, / it's scary. // That awkwardness / is the **feeling** / of growth / happening in real time. ///
+[STRONG] So stop protecting your comfort / like it's precious. // Comfort / kept small / is just / a cage / with pillows. ///
+[SLOW] Choose the harder path. // Choose the challenge. // Choose / to become someone new — / even when the old you / begs to stay the same. ///
+[STRONG] Growth / **over** comfort. // Every time. ///`
+  },
+  {
+    id: "mot-26",
+    title: "Your Story Isn't Over",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["hope", "resilience", "new beginnings"],
+    description: "Hope for anyone who feels like they've reached the end.",
+    content:
+      `[SLOW] Maybe right now / it feels / like the story is ending. // Like the best chapters / are already behind you. ///
+[STRONG] They are **not**. ///
+[SLOW] You are the **author** here. // And an author / who's still breathing / can always / write a new chapter. // A plot twist. / A comeback. / An ending / no one saw coming. //
+[SMILE] The lowest point / in a great story / is never the finale. // It's the moment / right before / everything **turns**. ///
+[STRONG] So if this is a dark chapter — / good. // Dark chapters / make the light ones / mean **more**. ///
+[SLOW] Don't close the book / in the middle. // Don't judge your whole life / by its hardest page. //
+[STRONG] Pick up the pen. // Your story / is **not** over. // In fact — / the best part / might be / **next**. ///`
+  },
+  {
+    id: "mot-27",
+    title: "Do It Scared",
+    category: "motivation",
+    difficulty: "beginner",
+    tags: ["fear", "courage", "action"],
+    description: "Permission to move forward before the fear disappears.",
+    content:
+      `[STRONG] Waiting for the fear to leave / before you act? ///
+[SLOW] You'll be waiting / a **long** time. ///
+The fear / doesn't leave first. // You move first — / and **then** / the fear / gets quieter. //
+[STRONG] So do it **scared**. ///
+[SLOW] Make the call / with shaking hands. // Walk on stage / with a pounding heart. // Send the message, / start the business, / say the truth / — / while every nerve in your body / says "wait." //
+[SMILE] Brave people / aren't fearless. // They just / refuse / to let fear / drive. ///
+[STRONG] Feel the fear. // Feel it fully. // And then — / **do it anyway**. ///
+[SLOW] Because on the other side / of "I did it scared" / is a version of you / that is / **unstoppable**. ///`
+  },
+  {
+    id: "mot-28",
+    title: "Small Wins Build Big Belief",
+    category: "motivation",
+    difficulty: "beginner",
+    tags: ["confidence", "momentum", "habits"],
+    description: "Stacking small victories to build unshakable self-belief.",
+    content:
+      `[SLOW] You don't build confidence / by thinking about it. // You build it / by **stacking evidence**. ///
+[STRONG] Small wins. // One after another. ///
+[SLOW] You said you'd wake up early / and you did. // You promised one workout / and you finished it. // You made the bed, / kept the appointment, / finished the task. //
+[SMILE] Tiny? // Sure. // But every small win / whispers to your brain: // "See? / I **do** / what I say / I'll do." ///
+[STRONG] And that whisper — / repeated enough — / becomes a **roar** / of self-belief. ///
+[SLOW] So don't wait / for the giant victory / to feel proud. // Collect the small ones. // Celebrate them. // Let them **stack**. //
+[STRONG] Because big belief / is just / a **pile** / of small wins / — / and you can start / that pile / **today**. ///`
+  },
+  {
+    id: "mot-29",
+    title: "Keep Your Promise to Yourself",
+    category: "motivation",
+    difficulty: "intermediate",
+    tags: ["integrity", "discipline", "self-trust"],
+    description: "Building self-trust by honoring the commitments you make to yourself.",
+    content:
+      `[SLOW] You keep your promises / to everyone else. // Your boss. / Your friends. / Strangers, / even. ///
+[STRONG] But the promises / you make to **yourself**? // Those / you break / without a second thought. ///
+[SLOW] "I'll start Monday." / "I'll do it tomorrow." / "This time / I mean it." // And then — / you don't. //
+[SMILE] Here's the cost: // every time / you break a promise to yourself, / you teach your own mind / that your word / to **you** / doesn't matter. ///
+[STRONG] So flip it. ///
+[SLOW] Start small. // Make **one** promise / you know you can keep. // Then keep it. // Then / make another. //
+[STRONG] This / is how self-trust / is built. // Not in giant leaps — / but in kept word / after kept word. ///
+[SLOW] Be someone / **you** / can count on. ///`
+  },
+  {
+    id: "mot-30",
+    title: "Rise and Own Today",
+    category: "motivation",
+    difficulty: "beginner",
+    tags: ["morning", "energy", "ownership"],
+    description: "A high-energy morning script to start the day with intention.",
+    content:
+      `[STRONG] Good morning. // You woke up. ///
+[SLOW] That / is not a small thing. // It's a **gift** / — / a fresh, / clean, / unwritten day. // And it belongs / entirely / to **you**. //
+[STRONG] So the question is: // what are you going to **do** with it? ///
+[SLOW] You can drift through it / on autopilot, / reacting, / scrolling, / letting the day / happen **to** you. // Or / you can grab the pen / and decide / to happen **to the day**. ///
+[SMILE] Set one intention. // Just one. // "Today, / I will ___." // And then / go **make it true**. ///
+[STRONG] You are not too tired. // You are not too late. // You are **awake**, / and that means / you still have / a **chance**. ///
+[SLOW] So rise. // Stand tall. // And **own** / today. ///`
   },
 ];

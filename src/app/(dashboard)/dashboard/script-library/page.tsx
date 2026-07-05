@@ -6,6 +6,7 @@ import { Search, Mic, Star, Filter, ChevronDown } from "lucide-react";
 
 const CATEGORIES = [
   "All",
+  "motivation",
   "business",
   "interview",
   "ielts",
@@ -18,6 +19,7 @@ const CATEGORIES = [
 
 const CATEGORY_LABELS: Record<string, string> = {
   All: "All",
+  motivation: "Motivation",
   business: "Business",
   interview: "Interview",
   ielts: "IELTS",

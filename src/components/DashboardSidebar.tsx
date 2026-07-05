@@ -7,7 +7,7 @@ import {
   Briefcase, Monitor, Users, Settings, CreditCard, Save, Target,
   Mic2, ShieldCheck, Bot, AudioLines, BookMarked, Zap,
   ChevronLeft, ChevronRight, ChevronDown, Library, Wand2, History, GraduationCap, ClipboardCheck,
-  Landmark, type LucideIcon,
+  Landmark, FilePlus2, type LucideIcon,
 } from "lucide-react";
 import { useUser as useClerkUser } from "@clerk/nextjs";
 import { ADMIN_EMAIL, PLAN_FEATURES } from "@/lib/users";
@@ -28,6 +28,7 @@ const navSections: NavSection[] = [
         label: "Script", icon: FileText,
         items: [
           { label: "Script Writer", href: "/dashboard/script-writer", icon: FileText, feature: "canUseScriptWriter" },
+          { label: "Add Script", href: "/dashboard/add-script", icon: FilePlus2, feature: null },
           { label: "Script Library", href: "/dashboard/script-library", icon: Library, feature: null },
           { label: "Script Generator", href: "/dashboard/script-generator", icon: Wand2, feature: null },
           { label: "Saved Scripts", href: "/dashboard/saved-scripts", icon: Save, feature: null },
