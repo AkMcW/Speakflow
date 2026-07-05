@@ -4,14 +4,74 @@ import { useRouter } from "next/navigation";
 import { SPEECHES, Speech } from "@/data/speeches";
 import {
   Landmark, Search, ArrowLeft, ExternalLink, Mic2, Copy, CheckCircle,
-  Lightbulb, Quote, Lock, Calendar, MapPin,
+  Lightbulb, Quote, Lock, Calendar, MapPin, Layers,
 } from "lucide-react";
+
+// ── Grouping helpers (derived, so no per-entry data edits needed) ──
+const ERA_ORDER = [
+  "19th Century",
+  "Early 20th Century (1900–1945)",
+  "Post-War & Civil Rights (1946–1979)",
+  "Modern Era (1980–2009)",
+  "Contemporary (2010–Present)",
+];
+
+function eraOf(date: string): string {
+  const m = date.match(/(\d{4})/g);
+  const year = m ? parseInt(m[m.length - 1], 10) : 2000;
+  if (year < 1900) return ERA_ORDER[0];
+  if (year <= 1945) return ERA_ORDER[1];
+  if (year <= 1979) return ERA_ORDER[2];
+  if (year <= 2009) return ERA_ORDER[3];
+  return ERA_ORDER[4];
+}
+
+const THEME_ORDER = [
+  "Justice & Human Rights",
+  "Freedom & Democracy",
+  "War & Crisis",
+  "Independence & Nation-Building",
+  "Grief & Reconciliation",
+  "Vision & Inspiration",
+  "Life, Legacy & Wisdom",
+];
+
+// speech number → theme
+const THEME_BY_NUM: Record<number, string> = {
+  1: "Vision & Inspiration", 2: "Justice & Human Rights", 3: "Justice & Human Rights",
+  4: "Justice & Human Rights", 5: "Freedom & Democracy", 6: "Grief & Reconciliation",
+  7: "Freedom & Democracy", 8: "Vision & Inspiration", 9: "War & Crisis", 10: "War & Crisis",
+  11: "War & Crisis", 12: "War & Crisis", 13: "Freedom & Democracy", 14: "Justice & Human Rights",
+  15: "Grief & Reconciliation", 16: "Independence & Nation-Building", 17: "Independence & Nation-Building",
+  18: "Justice & Human Rights", 19: "Justice & Human Rights", 20: "Justice & Human Rights",
+  21: "Justice & Human Rights", 22: "Justice & Human Rights", 23: "Freedom & Democracy",
+  24: "Grief & Reconciliation", 25: "Grief & Reconciliation", 26: "Freedom & Democracy",
+  27: "Freedom & Democracy", 28: "War & Crisis", 29: "Vision & Inspiration", 30: "Life, Legacy & Wisdom",
+  31: "Life, Legacy & Wisdom", 32: "Justice & Human Rights", 33: "Life, Legacy & Wisdom",
+  34: "Life, Legacy & Wisdom", 35: "Life, Legacy & Wisdom", 36: "Justice & Human Rights",
+  37: "Justice & Human Rights", 38: "Justice & Human Rights", 39: "Justice & Human Rights",
+  40: "Justice & Human Rights", 41: "Life, Legacy & Wisdom", 42: "Justice & Human Rights",
+  43: "Grief & Reconciliation",
+};
+
+const THEME_EMOJI: Record<string, string> = {
+  "Justice & Human Rights": "⚖️",
+  "Freedom & Democracy": "🗽",
+  "War & Crisis": "🛡️",
+  "Independence & Nation-Building": "🏛️",
+  "Grief & Reconciliation": "🕊️",
+  "Vision & Inspiration": "✨",
+  "Life, Legacy & Wisdom": "📖",
+};
+
+type GroupBy = "none" | "era" | "theme";
 
 export default function SpeechesPage() {
   const router = useRouter();
   const [selected, setSelected] = useState<Speech | null>(null);
   const [search, setSearch] = useState("");
   const [copied, setCopied] = useState(false);
+  const [groupBy, setGroupBy] = useState<GroupBy>("none");
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -141,41 +201,90 @@ export default function SpeechesPage() {
         </p>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-secondary)" }} />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search speaker, title, or topic…"
-          className="w-full pl-9 pr-3 py-2 rounded-lg text-sm"
-          style={{ background: "var(--bg-card)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
-        />
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+        <div className="relative flex-1 max-w-sm">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-secondary)" }} />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search speaker, title, or topic…"
+            className="w-full pl-9 pr-3 py-2 rounded-lg text-sm"
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}><Layers size={14} /> Group by</span>
+          <div className="flex items-center gap-1 border rounded-lg overflow-hidden text-xs font-semibold" style={{ borderColor: "var(--border)" }}>
+            {([["none", "None"], ["era", "Era"], ["theme", "Theme"]] as [GroupBy, string][]).map(([val, label]) => (
+              <button key={val} onClick={() => setGroupBy(val)}
+                className="px-3 py-1.5 transition-colors"
+                style={groupBy === val
+                  ? { background: "var(--accent)", color: "#fff" }
+                  : { background: "var(--bg-card)", color: "var(--text-secondary)" }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-3">
-        {filtered.map((s) => (
-          <button key={s.num} onClick={() => setSelected(s)}
-            className="w-full text-left rounded-xl p-4 transition-all hover:shadow-md"
-            style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}>
-            <div className="flex items-start gap-3">
-              <span className="text-xs font-bold px-2 py-1 rounded-lg shrink-0" style={{ background: "var(--accent-bg)", color: "var(--accent)" }}>#{s.num}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="font-bold" style={{ color: "var(--text-primary)" }}>{s.title}</h2>
-                  {s.publicDomain
-                    ? <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: "#E6F7F2", color: "#00875A" }}>Full text</span>
-                    : <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5" style={{ background: "#FFF8E7", color: "#B7791F" }}><Lock size={8} /> Link</span>}
+      {groupBy === "none" ? (
+        <div className="space-y-3">
+          {filtered.map((s) => renderCard(s))}
+        </div>
+      ) : (
+        (() => {
+          const order = groupBy === "era" ? ERA_ORDER : THEME_ORDER;
+          const keyOf = (s: Speech) => (groupBy === "era" ? eraOf(s.date) : THEME_BY_NUM[s.num] ?? "Other");
+          const groups = order
+            .map((g) => ({ label: g, items: filtered.filter((s) => keyOf(s) === g) }))
+            .filter((g) => g.items.length > 0);
+          if (groups.length === 0) {
+            return <p className="text-sm text-center py-10" style={{ color: "var(--text-secondary)" }}>No speeches match your search.</p>;
+          }
+          return (
+            <div className="space-y-6">
+              {groups.map((g) => (
+                <div key={g.label}>
+                  <div className="flex items-center gap-2 mb-2.5">
+                    {groupBy === "theme" && <span className="text-lg">{THEME_EMOJI[g.label]}</span>}
+                    <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: "var(--text-primary)" }}>{g.label}</h2>
+                    <span className="text-[11px] px-1.5 py-0.5 rounded-full" style={{ background: "var(--accent-bg)", color: "var(--accent)" }}>{g.items.length}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {g.items.map((s) => renderCard(s))}
+                  </div>
                 </div>
-                <p className="text-sm font-semibold" style={{ color: "var(--accent)" }}>{s.speaker}</p>
-                <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>{s.date} · {s.place} · {s.topic}</p>
-                <p className="text-xs mt-1.5" style={{ color: "var(--text-secondary)" }}>{s.whyItStands}</p>
-              </div>
+              ))}
             </div>
-          </button>
-        ))}
-      </div>
+          );
+        })()
+      )}
     </div>
   );
+
+  function renderCard(s: Speech) {
+    return (
+      <button key={s.num} onClick={() => setSelected(s)}
+        className="w-full text-left rounded-xl p-4 transition-all hover:shadow-md"
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}>
+        <div className="flex items-start gap-3">
+          <span className="text-xs font-bold px-2 py-1 rounded-lg shrink-0" style={{ background: "var(--accent-bg)", color: "var(--accent)" }}>#{s.num}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="font-bold" style={{ color: "var(--text-primary)" }}>{s.title}</h2>
+              {s.publicDomain
+                ? <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: "#E6F7F2", color: "#00875A" }}>Full text</span>
+                : <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5" style={{ background: "#FFF8E7", color: "#B7791F" }}><Lock size={8} /> Link</span>}
+            </div>
+            <p className="text-sm font-semibold" style={{ color: "var(--accent)" }}>{s.speaker}</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>{s.date} · {s.place} · {s.topic}</p>
+            <p className="text-xs mt-1.5" style={{ color: "var(--text-secondary)" }}>{s.whyItStands}</p>
+          </div>
+        </div>
+      </button>
+    );
+  }
 }
