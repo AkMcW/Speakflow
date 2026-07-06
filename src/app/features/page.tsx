@@ -37,7 +37,7 @@ const features = [
     title: "Pronunciation Analysis",
     tagline: "Know exactly which sounds to fix",
     description:
-      "SpeakFlow's pronunciation engine goes beyond a simple score. It identifies specific phonemes you're mispronouncing, compares your delivery to a native reference, and provides targeted drills.",
+      "Spokiva's pronunciation engine goes beyond a simple score. It identifies specific phonemes you're mispronouncing, compares your delivery to a native reference, and provides targeted drills.",
     benefits: [
       "Phoneme-level error detection",
       "Word stress and intonation analysis",
@@ -92,14 +92,14 @@ const features = [
 ];
 
 const comparisonRows = [
-  { feature: "AI-generated scripts", speakflow: true, duolingo: false, elsa: false, youtube: false },
-  { feature: "Speech recording & analysis", speakflow: true, duolingo: false, elsa: true, youtube: false },
-  { feature: "Pronunciation phoneme scoring", speakflow: true, duolingo: false, elsa: true, youtube: false },
-  { feature: "IELTS band score estimates", speakflow: true, duolingo: false, elsa: false, youtube: false },
-  { feature: "Interview Coach (STAR method)", speakflow: true, duolingo: false, elsa: false, youtube: false },
-  { feature: "Virtual Audience Simulation", speakflow: true, duolingo: false, elsa: false, youtube: false },
-  { feature: "Progress analytics dashboard", speakflow: true, duolingo: true, elsa: true, youtube: false },
-  { feature: "Business scenario scripts", speakflow: true, duolingo: false, elsa: false, youtube: false },
+  { feature: "AI-generated scripts", spokiva: true, duolingo: false, elsa: false, youtube: false },
+  { feature: "Speech recording & analysis", spokiva: true, duolingo: false, elsa: true, youtube: false },
+  { feature: "Pronunciation phoneme scoring", spokiva: true, duolingo: false, elsa: true, youtube: false },
+  { feature: "IELTS band score estimates", spokiva: true, duolingo: false, elsa: false, youtube: false },
+  { feature: "Interview Coach (STAR method)", spokiva: true, duolingo: false, elsa: false, youtube: false },
+  { feature: "Virtual Audience Simulation", spokiva: true, duolingo: false, elsa: false, youtube: false },
+  { feature: "Progress analytics dashboard", spokiva: true, duolingo: true, elsa: true, youtube: false },
+  { feature: "Business scenario scripts", spokiva: true, duolingo: false, elsa: false, youtube: false },
 ];
 
 export default function FeaturesPage() {
@@ -162,14 +162,14 @@ export default function FeaturesPage() {
         {/* Comparison Table */}
         <section className="bg-white py-16 px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-[#1F1F1F] mb-2 text-center">How SpeakFlow compares</h2>
+            <h2 className="text-2xl font-bold text-[#1F1F1F] mb-2 text-center">How Spokiva compares</h2>
             <p className="text-[#636363] text-center mb-10">vs. Duolingo, ELSA Speak, and YouTube tutorials</p>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[#F5F5F5]">
                     <th className="text-left px-4 py-3 text-sm font-bold text-[#1F1F1F] border border-[#E0E0E0]">Feature</th>
-                    <th className="px-4 py-3 text-sm font-bold text-[#0056D2] border border-[#E0E0E0] text-center">SpeakFlow AI</th>
+                    <th className="px-4 py-3 text-sm font-bold text-[#0056D2] border border-[#E0E0E0] text-center">Spokiva AI</th>
                     <th className="px-4 py-3 text-sm font-bold text-[#636363] border border-[#E0E0E0] text-center">Duolingo</th>
                     <th className="px-4 py-3 text-sm font-bold text-[#636363] border border-[#E0E0E0] text-center">ELSA Speak</th>
                     <th className="px-4 py-3 text-sm font-bold text-[#636363] border border-[#E0E0E0] text-center">YouTube</th>
@@ -179,7 +179,7 @@ export default function FeaturesPage() {
                   {comparisonRows.map((row, i) => (
                     <tr key={row.feature} className={i % 2 === 0 ? "bg-white" : "bg-[#F5F5F5]"}>
                       <td className="px-4 py-3 text-sm text-[#1F1F1F] border border-[#E0E0E0]">{row.feature}</td>
-                      {[row.speakflow, row.duolingo, row.elsa, row.youtube].map((val, j) => (
+                      {[row.spokiva, row.duolingo, row.elsa, row.youtube].map((val, j) => (
                         <td key={j} className="px-4 py-3 border border-[#E0E0E0] text-center">
                           {val ? (
                             <CheckCircle size={16} className={j === 0 ? "text-[#00B37D] mx-auto" : "text-[#636363] mx-auto"} />
@@ -200,7 +200,7 @@ export default function FeaturesPage() {
         <section className="bg-[#0056D2] py-14 px-4 text-center">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-4">Ready to get started?</h2>
-            <p className="text-blue-100 mb-6">Join 50,000+ speakers improving with SpeakFlow AI.</p>
+            <p className="text-blue-100 mb-6">Join 50,000+ speakers improving with Spokiva AI.</p>
             <Link
               href="/signup"
               className="inline-block bg-white text-[#0056D2] hover:bg-[#E8F1FF] font-bold px-8 py-3 rounded transition-colors"

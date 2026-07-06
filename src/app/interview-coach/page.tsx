@@ -82,7 +82,7 @@ export default function InterviewCoachPage() {
               <div>
                 <h2 className="text-2xl font-bold text-[#1F1F1F] mb-4">The STAR Method — built in</h2>
                 <p className="text-[#636363] leading-relaxed mb-6">
-                  SpeakFlow structures every interview answer using the STAR framework — the gold standard for behavioral interview responses.
+                  Spokiva structures every interview answer using the STAR framework — the gold standard for behavioral interview responses.
                 </p>
                 <div className="space-y-4">
                   {[

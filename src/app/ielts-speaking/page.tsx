@@ -143,7 +143,7 @@ export default function IELTSSpeakingPage() {
         <section className="bg-[#F5F5F5] py-16 px-4">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-2xl font-bold text-[#1F1F1F] mb-2 text-center">IELTS Band Score Criteria</h2>
-            <p className="text-[#636363] text-center mb-10">SpeakFlow estimates your band across all four official dimensions.</p>
+            <p className="text-[#636363] text-center mb-10">Spokiva estimates your band across all four official dimensions.</p>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse bg-white rounded-lg overflow-hidden border border-[#E0E0E0]">
                 <thead>
@@ -171,10 +171,10 @@ export default function IELTSSpeakingPage() {
           </div>
         </section>
 
-        {/* Why SpeakFlow for IELTS */}
+        {/* Why Spokiva for IELTS */}
         <section className="bg-white py-16 px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-[#1F1F1F] mb-8 text-center">Why SpeakFlow for IELTS?</h2>
+            <h2 className="text-2xl font-bold text-[#1F1F1F] mb-8 text-center">Why Spokiva for IELTS?</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 "Band score estimates aligned to official IELTS criteria",

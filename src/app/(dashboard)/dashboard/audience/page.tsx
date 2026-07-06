@@ -58,7 +58,7 @@ export default function AudiencePage() {
   const hasAccess = isAdmin;
 
   function startSession(modeName: string) {
-    localStorage.setItem("speakflow_active_script", JSON.stringify({
+    localStorage.setItem("spokiva_active_script", JSON.stringify({
       content: "",
       scenario: `Virtual Audience: ${modeName}`,
       wordCount: 0,

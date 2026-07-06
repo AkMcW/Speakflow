@@ -143,9 +143,9 @@ export default function ResultsPage() {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
-    setData(parseAnalysis(sessionStorage.getItem("speakflow_analysis")));
-    setPrev(parseAnalysis(sessionStorage.getItem("speakflow_analysis_prev")));
-    const sc = sessionStorage.getItem("speakflow_analysis_scenario");
+    setData(parseAnalysis(sessionStorage.getItem("spokiva_analysis")));
+    setPrev(parseAnalysis(sessionStorage.getItem("spokiva_analysis_prev")));
+    const sc = sessionStorage.getItem("spokiva_analysis_scenario");
     if (sc) setScenario(sc);
   }, []);
 

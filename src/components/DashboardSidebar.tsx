@@ -172,7 +172,7 @@ export default function DashboardSidebar() {
             </div>
             {!isCollapsed && (
               <span className="font-bold text-sm whitespace-nowrap" style={{ color: "var(--text-primary)" }}>
-                SpeakFlow AI
+                Spokiva AI
               </span>
             )}
           </Link>

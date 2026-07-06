@@ -303,7 +303,7 @@ export default function ScriptWriterPage() {
   }
 
   function handleSendToPractice() {
-    localStorage.setItem("speakflow_active_script", JSON.stringify({
+    localStorage.setItem("spokiva_active_script", JSON.stringify({
       content: script,
       scenario: form.scenario,
       wordCount,

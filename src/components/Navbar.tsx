@@ -36,7 +36,7 @@ export default function Navbar() {
           <div className="w-8 h-8 bg-[#0056D2] rounded-lg flex items-center justify-center">
             <Mic2 size={18} className="text-white" />
           </div>
-          <span className="text-lg font-bold text-[#1F1F1F]">SpeakFlow</span>
+          <span className="text-lg font-bold text-[#1F1F1F]">Spokiva</span>
           <span className="text-xs font-semibold bg-[#E8F1FF] text-[#0056D2] px-1.5 py-0.5 rounded">AI</span>
         </Link>
 

@@ -12,7 +12,7 @@ export interface SavedRecord {
   createdAt: string;
 }
 
-const DB_NAME = "speakflow_db";
+const DB_NAME = "spokiva_db";
 const DB_VERSION = 1;
 const STORE = "recordings";
 

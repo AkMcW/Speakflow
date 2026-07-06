@@ -53,7 +53,7 @@ export default function SavedScriptsPage() {
   }
 
   function sendToPractice(script: SavedScript) {
-    localStorage.setItem("speakflow_active_script", JSON.stringify({
+    localStorage.setItem("spokiva_active_script", JSON.stringify({
       content: script.content,
       scenario: script.scenario,
       wordCount: script.word_count,
@@ -162,7 +162,7 @@ export default function SavedScriptsPage() {
               <div className="flex items-center gap-2 shrink-0">
                 <Link
                   href="/dashboard/script-writer"
-                  onClick={() => localStorage.setItem("speakflow_edit_script", JSON.stringify(script))}
+                  onClick={() => localStorage.setItem("spokiva_edit_script", JSON.stringify(script))}
                   className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg transition-colors font-medium"
                   style={{ border: "1px solid var(--border)", color: "var(--text-secondary)" }}
                 >

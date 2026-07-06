@@ -8,7 +8,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    const stored = localStorage.getItem("speakflow_theme") as Theme | null;
+    const stored = localStorage.getItem("spokiva_theme") as Theme | null;
     const initial = stored ?? "light";
     setTheme(initial);
     document.documentElement.setAttribute("data-theme", initial);
@@ -17,7 +17,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   function toggle() {
     setTheme((t) => {
       const next = t === "light" ? "dark" : "light";
-      localStorage.setItem("speakflow_theme", next);
+      localStorage.setItem("spokiva_theme", next);
       document.documentElement.setAttribute("data-theme", next);
       return next;
     });

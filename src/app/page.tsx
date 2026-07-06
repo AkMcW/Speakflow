@@ -20,8 +20,8 @@ const steps = [
 ];
 
 const testimonials = [
-  { name: "Priya Sharma", role: "IELTS Candidate", score: "Band 7.5", quote: "SpeakFlow helped me go from Band 5.5 to 7.5 in just 6 weeks. The AI feedback was more detailed than my tutor's." },
-  { name: "Marcus Chen", role: "Senior Manager, Deloitte", score: "Promoted in 3 months", quote: "I used to struggle presenting to the C-suite. After 30 days of SpeakFlow practice, I felt completely confident." },
+  { name: "Priya Sharma", role: "IELTS Candidate", score: "Band 7.5", quote: "Spokiva helped me go from Band 5.5 to 7.5 in just 6 weeks. The AI feedback was more detailed than my tutor's." },
+  { name: "Marcus Chen", role: "Senior Manager, Deloitte", score: "Promoted in 3 months", quote: "I used to struggle presenting to the C-suite. After 30 days of Spokiva practice, I felt completely confident." },
   { name: "Aisha Okonkwo", role: "MBA Applicant", score: "Accepted to 3 top schools", quote: "The interview coach helped me nail my STAR answers. The virtual panel simulation was a game changer." },
 ];
 
@@ -52,7 +52,7 @@ export default function HomePage() {
               <span className="text-[#0056D2]">Score higher. Get hired.</span>
             </h1>
             <p className="text-lg text-[#636363] mb-8 max-w-2xl mx-auto leading-relaxed">
-              SpeakFlow AI helps non-native English speakers practice speaking, improve pronunciation, and nail every scenario — from IELTS exams to boardroom presentations.
+              Spokiva AI helps non-native English speakers practice speaking, improve pronunciation, and nail every scenario — from IELTS exams to boardroom presentations.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
               <Link href="/signup" className="inline-flex items-center justify-center gap-2 bg-[#0056D2] hover:bg-[#003B8E] text-white font-semibold px-8 py-3.5 rounded text-base transition-colors">
@@ -123,7 +123,7 @@ export default function HomePage() {
         <section className="bg-[#F5F5F5] py-16 px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-[#1F1F1F] mb-3">How SpeakFlow works</h2>
+              <h2 className="text-3xl font-bold text-[#1F1F1F] mb-3">How Spokiva works</h2>
               <p className="text-[#636363] text-lg">From zero to confident speaker in four steps.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -145,7 +145,7 @@ export default function HomePage() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-[#1F1F1F] mb-3">Real results from real speakers</h2>
-              <p className="text-[#636363] text-lg">Join 50,000+ learners who've improved with SpeakFlow.</p>
+              <p className="text-[#636363] text-lg">Join 50,000+ learners who've improved with Spokiva.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {testimonials.map((t) => (

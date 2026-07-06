@@ -17,8 +17,8 @@ type State = "idle" | "recording" | "transcribing" | "analyzing" | "done";
 
 function saveAnalysisForCompare() {
   try {
-    const cur = sessionStorage.getItem("speakflow_analysis");
-    if (cur) sessionStorage.setItem("speakflow_analysis_prev", cur);
+    const cur = sessionStorage.getItem("spokiva_analysis");
+    if (cur) sessionStorage.setItem("spokiva_analysis_prev", cur);
   } catch { /* ignore */ }
 }
 
@@ -255,7 +255,7 @@ export default function PracticePage() {
         setActiveScript({ content: ssScript, scenario: ssScenario || "Practice Session", wordCount: ssScript.split(/\s+/).length });
         return;
       }
-      const raw = localStorage.getItem("speakflow_active_script");
+      const raw = localStorage.getItem("spokiva_active_script");
       if (raw) setActiveScript(JSON.parse(raw));
     } catch { /* ignore */ }
   }, []);
@@ -364,8 +364,8 @@ export default function PracticePage() {
         const analysis = await res.json();
         if (!res.ok || analysis.error || !analysis.scores) throw new Error(analysis.error ?? "No scores returned");
         saveAnalysisForCompare();
-        sessionStorage.setItem("speakflow_analysis", JSON.stringify({ ...analysis, transcript: transcriptText }));
-        sessionStorage.setItem("speakflow_analysis_scenario", currentScenario);
+        sessionStorage.setItem("spokiva_analysis", JSON.stringify({ ...analysis, transcript: transcriptText }));
+        sessionStorage.setItem("spokiva_analysis_scenario", currentScenario);
         // Persist to database (non-critical — fire and forget)
         fetch("/api/practice/sessions", {
           method: "POST",
@@ -405,7 +405,7 @@ export default function PracticePage() {
         const msg = err instanceof Error ? err.message : "Analysis failed";
         console.error("Analysis error:", msg);
         setError(`AI analysis failed: ${msg}. Showing sample scores.`);
-        sessionStorage.setItem("speakflow_analysis", JSON.stringify({
+        sessionStorage.setItem("spokiva_analysis", JSON.stringify({
           scores: { pronunciation: 74, fluency: 81, confidence: 68, structure: 77, vocabulary: 72, pace: 83, overall: 76 },
           fillerWords: { count: 3, words: ["um", "uh", "like"] },
           wpm: 128,

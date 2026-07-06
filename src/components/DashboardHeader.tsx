@@ -32,7 +32,7 @@ export default function DashboardHeader() {
           <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: "var(--accent)" }}>
             <Mic2 size={13} className="text-white" />
           </div>
-          <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>SpeakFlow</span>
+          <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>Spokiva</span>
         </Link>
         <div className="hidden lg:block" />
       </div>

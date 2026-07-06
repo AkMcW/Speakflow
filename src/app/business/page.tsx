@@ -69,7 +69,7 @@ export default function BusinessPage() {
               Speak up at work with confidence
             </h1>
             <p className="text-lg text-[#636363] mb-8 max-w-2xl leading-relaxed">
-              SpeakFlow Business helps non-native English professionals communicate clearly in meetings, presentations, and executive updates — with AI-powered script generation and real-time delivery feedback.
+              Spokiva Business helps non-native English professionals communicate clearly in meetings, presentations, and executive updates — with AI-powered script generation and real-time delivery feedback.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
@@ -136,7 +136,7 @@ export default function BusinessPage() {
               <div>
                 <h2 className="text-2xl font-bold text-[#1F1F1F] mb-4">AI-generated script example</h2>
                 <p className="text-[#636363] leading-relaxed mb-4">
-                  Tell SpeakFlow your meeting topic, audience, and duration — and get a structured, professional script ready to practice in seconds.
+                  Tell Spokiva your meeting topic, audience, and duration — and get a structured, professional script ready to practice in seconds.
                 </p>
                 <ul className="space-y-2 mb-6">
                   {[
@@ -172,7 +172,7 @@ export default function BusinessPage() {
         {/* Benefits */}
         <section className="bg-[#F5F5F5] py-16 px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-[#1F1F1F] mb-8 text-center">Why non-native professionals choose SpeakFlow</h2>
+            <h2 className="text-2xl font-bold text-[#1F1F1F] mb-8 text-center">Why non-native professionals choose Spokiva</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 "Practice before high-stakes meetings, not after",

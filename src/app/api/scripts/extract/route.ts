@@ -142,7 +142,7 @@ async function fetchCaptionText(url: string): Promise<string | null> {
 async function extractUrl(url: string): Promise<{ title: string; text: string }> {
   const res = await fetch(url, {
     headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; SpeakFlowBot/1.0)",
+      "User-Agent": "Mozilla/5.0 (compatible; SpokivaBot/1.0)",
       "Accept": "text/html,application/xhtml+xml",
     },
     signal: AbortSignal.timeout(10000),

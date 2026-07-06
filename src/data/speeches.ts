@@ -3,7 +3,7 @@
 // Copyright note: full transcripts are only embedded for public-domain works
 // (U.S. Government speeches / pre-1929). Speeches still under copyright (e.g.
 // Obama, King) link out to the official transcript instead of reproducing text.
-// The "learn" analysis is original SpeakFlow commentary.
+// The "learn" analysis is original Spokiva commentary.
 
 export interface Speech {
   num: number;

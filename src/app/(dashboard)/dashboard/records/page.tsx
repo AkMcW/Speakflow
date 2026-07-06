@@ -54,7 +54,7 @@ export default function RecordsPage() {
     const url = URL.createObjectURL(record.audioBlob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `speakflow-${record.scenario.replace(/[^a-z0-9]/gi, "-").toLowerCase()}-${new Date(record.createdAt).toISOString().slice(0, 10)}.${ext}`;
+    a.download = `spokiva-${record.scenario.replace(/[^a-z0-9]/gi, "-").toLowerCase()}-${new Date(record.createdAt).toISOString().slice(0, 10)}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
   }

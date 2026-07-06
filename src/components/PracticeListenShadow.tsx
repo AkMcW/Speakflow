@@ -137,7 +137,7 @@ export default function PracticeListenShadow({ text }: { text: string }) {
     if (!audioB64) return;
     const a = document.createElement("a");
     a.href = `data:audio/mpeg;base64,${audioB64}`;
-    a.download = "speakflow-tts.mp3";
+    a.download = "spokiva-tts.mp3";
     a.click();
   }
 
